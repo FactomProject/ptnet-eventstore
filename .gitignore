@@ -1,0 +1,8 @@
+.idea
+.git
+vendor
+*.log
+.vagrant
+ptnetTest
+*.out
+*.log

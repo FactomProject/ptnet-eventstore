@@ -1,0 +1,15 @@
+package: github.com/FactomProject/ptnet-eventstore
+import:
+- package: github.com/FactomProject/web
+  version: develop
+- package: github.com/FactomProject/goleveldb
+  version: master
+  subpackages:
+  - leveldb
+  - leveldb/opt
+  - leveldb/util
+- package: github.com/hashicorp/go-memdb
+- package: google.golang.org/grpc
+  version: v1.15.0
+- package: github.com/hashicorp/go-immutable-radix
+  version: v1.0.0
