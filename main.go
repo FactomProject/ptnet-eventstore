@@ -12,7 +12,7 @@ var emptyPayload []byte
 func main() {
 	emptyPayload, _ = json.Marshal(map[string]string{})
 	runTicTacToe() // a game of tic-tac-toe
-	runOption()    // a simple contract with choice of output addresses
+	//runOption()    // a simple contract with choice of output addresses
 }
 
 func marshal(x interface{}) []byte {

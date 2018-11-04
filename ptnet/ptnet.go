@@ -67,7 +67,24 @@ func Commit(schema string, oid string, action string, value uint64, payload []by
 		Payload:     payload,
 	}
 
-	err := transform(StateMachines[schema], &event, true, afterCommit)
+	err := applyTransform(StateMachines[schema], &event, true, beforeCommit, afterCommit)
+	return &event, err
+}
+
+func Transform(schema string, oid string, action string, value uint64, payload []byte, precondition func(*Event) error ) (*Event, error) {
+
+	event := Event{
+		Timestamp:   uint64(time.Now().UnixNano()),
+		Schema:      schema,
+		Action:      action,
+		Oid:         oid,
+		Value:       value,
+		InputState:  nil,
+		OutputState: nil,
+		Payload:     payload,
+	}
+
+	err := applyTransform(StateMachines[schema], &event, true, precondition, afterCommit)
 	return &event, err
 }
 
@@ -121,19 +138,22 @@ func afterCommit(evt *Event) {
 	go blockchainPersist(evt)
 }
 
+func beforeCommit(evt *Event) error {
+	return nil
+}
+
 // update apply vector addition and update output State
 func VectorAdd(vectorIn []uint64, transform []int64, multiplier uint64) ([]uint64, error) {
 	var vectorOut []uint64
 	var err error = nil
 
-	transformLoop:
 	for offset, delta := range transform {
 		val := int64(vectorIn[offset]) + delta*int64(multiplier)
 		if val >= 0 {
 			vectorOut = append(vectorOut, uint64(val))
 		} else {
 			err = errors.New(fmt.Sprintf("invalid output: %v offset: %v", val, offset))
-			break transformLoop
+			break
 		}
 	}
 	return vectorOut, err
@@ -148,7 +168,7 @@ func vectorApply(vectorIn []uint64, transform []int64, multiplier uint64, stateO
 
 // add transform*multiplier to input vector and save valid output to state
 // optionally persist to the eventstore
-func transform(machine Machine, event *Event, persistEvent bool, callback func(*Event)) error {
+func applyTransform(machine Machine, event *Event, persistEvent bool, precondition func(*Event) error, callback func(*Event)) error {
 
 	if machine.Initial == nil {
 		return errors.New(fmt.Sprintf("Unknown schema: %v", event.Schema))
@@ -182,6 +202,11 @@ func transform(machine Machine, event *Event, persistEvent bool, callback func(*
 	if err != nil {
 		txn.Abort()
 		return err
+	}
+
+	err = precondition(event)
+	if err != nil {
+		panic(err)
 	}
 
 	err = txn.Insert(StateTable, outState)

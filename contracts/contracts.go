@@ -1,6 +1,7 @@
 package contracts
 
 import (
+	"errors"
 	"encoding/json"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
 	"github.com/hashicorp/go-memdb"
@@ -73,8 +74,8 @@ and one or more redeem conditions are met
 func Create(contract Declaration) (*ptnet.Event, error) {
 
 	payload, _ := json.MarshalIndent(contract, "", "    ")
-	println("contract:")
-	println(string(payload))
+	//println("contract:")
+	//println(string(payload))
 
 	// FIXME sign this event
 	event, err := ptnet.Commit(contract.Schema, contract.ContractID, ptnet.BEGIN, 1, []byte(payload))
@@ -85,6 +86,7 @@ func Create(contract Declaration) (*ptnet.Event, error) {
 		if err != nil {
 			txn.Commit()
 		} else {
+			panic(err)
 			txn.Abort()
 		}
 	}
@@ -92,10 +94,29 @@ func Create(contract Declaration) (*ptnet.Event, error) {
 	return event, err
 }
 
+func evalGuards(event *ptnet.Event) error {
+	// FIXME test that actor sending the event has proper permissions
+	txn := Contracts[event.Schema].db.Txn(false)
+	raw, _ := txn.First(ContractTable, "id", event.Oid)
+
+	if raw == nil {
+		err := errors.New("missing contract "+ event.Schema + "." + event.Oid)
+		_ = err
+		println("Missing contract")
+		return err
+	}
+
+	c := raw.(Declaration)
+
+	for g := range c.Guards {
+		println(g)
+	}
+	return nil
+}
+
 // FIXME add signing
 func Commit(command Command) (*ptnet.Event, error) {
-	// TODO: check guards and conditions
-	event, err := ptnet.Commit(command.Schema, command.ContractID, command.Action, command.Amount, command.Payload)
+	event, err := ptnet.Transform(command.Schema, command.ContractID, command.Action, command.Amount, command.Payload, evalGuards)
 	return event, err
 }
 
