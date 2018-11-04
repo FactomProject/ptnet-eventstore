@@ -45,8 +45,9 @@ func TestCommit(t *testing.T) {
 
 	contract := contracts.TicTacToeContract()
 	event, err = contracts.Create(contract)
-
 	AssertNil(t, err)
+	AssertEqual(t, true, contracts.Exists(ptnet.OctoeV1, contractID), "Failed to retrieve contract declaration")
+
 	AssertEqual(t, event.Oid, contractID, "")
 	AssertEqual(t, event.Action, ptnet.BEGIN, "")
 	AssertEqual(t, event.InputState, []uint64{1,1,1,1,1,1,1,1,1,1,1,1,1,1}, "")
@@ -54,7 +55,6 @@ func TestCommit(t *testing.T) {
 
 	AssertEqual(t, false, contracts.IsHalted(contract), "Contract should not be halted")
 
-	// FIXME
-	//event, err = commit("X11")
-	//AssertNil(t, err)
+	event, err = commit("X11")
+	AssertNil(t, err)
 }

@@ -3,6 +3,7 @@ package contracts
 import (
 	"errors"
 	"encoding/json"
+	"fmt"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
 	"github.com/hashicorp/go-memdb"
 )
@@ -63,6 +64,11 @@ var Contracts map[string]Contract = map[string]Contract{
 	},
 }
 
+// start a new transaction with in-memory db
+func Txn(schema string, write bool) *memdb.Txn {
+	return Contracts[schema].db.Txn(write)
+}
+
 /*
 NOTE: a contract is considered complete if state machine is halted
 and one or more redeem conditions are met
@@ -81,17 +87,28 @@ func Create(contract Declaration) (*ptnet.Event, error) {
 	event, err := ptnet.Commit(contract.Schema, contract.ContractID, ptnet.BEGIN, 1, []byte(payload))
 
 	if err != nil {
-		txn := Contracts[contract.Schema].db.Txn(true)
-		err = txn.Insert(ContractTable, contract)
-		if err != nil {
-			txn.Commit()
-		} else {
-			panic(err)
-			txn.Abort()
-		}
+		panic(err)
 	}
 
+	txn := Contracts[contract.Schema].db.Txn(true)
+	err = txn.Insert(ContractTable, contract)
+	if err != nil {
+		panic(err)
+		//txn.Abort()
+	}
+	txn.Commit()
+
 	return event, err
+}
+
+func state(schema string, contractID string) (ptnet.State, error){
+	txn := ptnet.Txn(schema, false)
+	raw, err := txn.First(ptnet.StateTable, "id", contractID)
+	if raw  == nil || err != nil {
+		return ptnet.State{}, errors.New("missing state")
+	}
+
+	return raw.(ptnet.State), nil
 }
 
 func evalGuards(event *ptnet.Event) error {
@@ -100,16 +117,17 @@ func evalGuards(event *ptnet.Event) error {
 	raw, _ := txn.First(ContractTable, "id", event.Oid)
 
 	if raw == nil {
-		err := errors.New("missing contract "+ event.Schema + "." + event.Oid)
-		_ = err
-		println("Missing contract")
-		return err
+		return errors.New("missing contract "+ event.Schema + "." + event.Oid)
 	}
 
 	c := raw.(Declaration)
 
-	for g := range c.Guards {
-		println(g)
+	currentState, _ := state(event.Schema, event.Oid)
+
+	for i, g := range c.Guards {
+		fmt.Printf("%v\n", g)
+		_ = i
+		ptnet.VectorAdd(currentState.Vector, g, 1)
 	}
 	return nil
 }
@@ -118,6 +136,16 @@ func evalGuards(event *ptnet.Event) error {
 func Commit(command Command) (*ptnet.Event, error) {
 	event, err := ptnet.Transform(command.Schema, command.ContractID, command.Action, command.Amount, command.Payload, evalGuards)
 	return event, err
+}
+
+func Exists(schema string, contractID string)  bool {
+	txn := Contracts[schema].db.Txn(false)
+	raw, err := txn.First(ContractTable, "id", contractID)
+	if err != nil {
+		panic(err)
+	}
+
+	return raw != nil
 }
 
 func IsHalted(contract Declaration) bool {
