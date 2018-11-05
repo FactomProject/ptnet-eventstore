@@ -42,10 +42,10 @@ type Event struct {
 	InputState  StateVector `json:"input"`
 	OutputState StateVector `json:"output"`
 	Payload     []byte      `json:"payload"`
-	pubkeys      []string
-	signatures  []string
+	pubkeys      []string // pubkey used to verify signature
+	signatures  []string // signatures
 	digest     []byte
-	entryhash   string      /* on some interval we will report on events with missing entryhash */
+	entryhash   string
 }
 
 // start a new transaction with in-memory db
@@ -71,7 +71,7 @@ func Commit(schema string, oid string, action string, value uint64, payload []by
 	return &event, err
 }
 
-func Transform(schema string, oid string, action string, value uint64, payload []byte, precondition func(*Event) error ) (*Event, error) {
+func Transform(schema string, oid string, action string, value uint64, payload []byte, beforeCommitCallback func(*Event) error ) (*Event, error) {
 
 	event := Event{
 		Timestamp:   uint64(time.Now().UnixNano()),
@@ -84,21 +84,39 @@ func Transform(schema string, oid string, action string, value uint64, payload [
 		Payload:     payload,
 	}
 
-	err := applyTransform(StateMachines[schema], &event, true, precondition, afterCommit)
+	err := applyTransform(StateMachines[schema], &event, true, beforeCommitCallback, afterCommit)
 	return &event, err
 }
 
-func addSignature(event *Event, pubkey string, sig string) {
-	// REVIEW: should this be RCD ?
-	event.signatures = append(event.signatures, pubkey)
-	event.pubkeys = append(event.signatures, sig)
+func AddSignature(event *Event, pubkey string, sig string) {
+	if event.digest == nil {
+		panic("must add digest before affixing signature")
+	}
+	event.signatures = append(event.signatures, sig)
+	event.pubkeys = append(event.pubkeys, pubkey)
 }
 
-func addDigest(event *Event, pubkey string, sig string) {
+func ValidSignature(event *Event, pubkey string) bool {
+	for i, key := range event.pubkeys {
+		//fmt.Printf("validating sigs %v <=> %v\n", pubkey, key)
+		if key != "" { // FIXME: actually verify signature
+			_ = i
+			//return event.signatures[i] != ""
+			return true
+		}
+	}
+	return false
+}
+
+func AddDigest(event *Event) {
 	data, _ := json.Marshal(event)
 	h := sha256.New()
 	h.Write(data)
 	event.digest = h.Sum(nil)
+}
+
+func GetDigest(event *Event) []byte {
+	return event.digest
 }
 
 func encodeEvent(event *Event) *bytes.Buffer {

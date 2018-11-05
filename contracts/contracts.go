@@ -1,8 +1,8 @@
 package contracts
 
 import (
-	"errors"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
 	"github.com/hashicorp/go-memdb"
@@ -41,14 +41,15 @@ type ContractState struct {
 	State     ptnet.State `json:"state"`
 }
 
-// TODO add signing
 type Command struct {
 	ChainID    string `json:"chainid"`
 	ContractID string `json:"contractid"`
 	Schema     string `json:"schema"`
 	Action     string `json:"action"`
 	Amount     uint64 `json:"amount"`
-	Payload    []byte
+	Payload    []byte `json:"payload"`
+	Privkey    string
+	Pubkey     string
 }
 
 var Contracts map[string]Contract = map[string]Contract{
@@ -69,14 +70,6 @@ func Txn(schema string, write bool) *memdb.Txn {
 	return Contracts[schema].db.Txn(write)
 }
 
-/*
-NOTE: a contract is considered complete if state machine is halted
-and one or more redeem conditions are met
-
-// TODO include all the other inputs needed to conform with  https://github.com/Factom-Asset-Tokens/FAT/blob/master/fatips/0.md
-*/
-
-// TODO Rewrite to accept a declaration as input
 func Create(contract Declaration) (*ptnet.Event, error) {
 
 	payload, _ := json.MarshalIndent(contract, "", "    ")
@@ -111,8 +104,8 @@ func state(schema string, contractID string) (ptnet.State, error){
 	return raw.(ptnet.State), nil
 }
 
+// validate event against guard conditions
 func evalGuards(event *ptnet.Event) error {
-	// FIXME test that actor sending the event has proper permissions
 	txn := Contracts[event.Schema].db.Txn(false)
 	raw, _ := txn.First(ContractTable, "id", event.Oid)
 
@@ -124,18 +117,30 @@ func evalGuards(event *ptnet.Event) error {
 
 	currentState, _ := state(event.Schema, event.Oid)
 
+	// expect event to be signed
 	for i, g := range c.Guards {
-		fmt.Printf("%v\n", g)
-		_ = i
-		ptnet.VectorAdd(currentState.Vector, g, 1)
+		_ , err := ptnet.VectorAdd(currentState.Vector, g, 1)
+		if err == nil {
+			if ptnet.ValidSignature(event, c.Outputs[i].Address) {
+				return nil
+			} else {
+				//fmt.Printf("guard[%v] => %v \n", i, c.Outputs[i].Address)
+			}
+		}
 	}
+	// FIXME actually restrict action if event is not signed w/ a valid key
+	//return errors.New("failed guard condition")
 	return nil
 }
 
-// FIXME add signing
-func Commit(command Command) (*ptnet.Event, error) {
-	event, err := ptnet.Transform(command.Schema, command.ContractID, command.Action, command.Amount, command.Payload, evalGuards)
-	return event, err
+func Commit(cmd Command) (*ptnet.Event, error) {
+	return ptnet.Transform(cmd.Schema, cmd.ContractID, cmd.Action, cmd.Amount, cmd.Payload, func (evt *ptnet.Event) error {
+		// FIXME actually do signing
+		sig := fmt.Sprintf("signed with: %v",  cmd.Privkey)
+		ptnet.AddDigest(evt)
+		ptnet.AddSignature(evt, cmd.Pubkey, sig)
+		return evalGuards(evt)
+	})
 }
 
 func Exists(schema string, contractID string)  bool {
