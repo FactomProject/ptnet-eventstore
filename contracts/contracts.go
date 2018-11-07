@@ -8,6 +8,10 @@ import (
 	"github.com/hashicorp/go-memdb"
 )
 
+// KLUDGE values used for testing
+var CHAIN_ID string = "|ChainID|"
+var CONTRACT_ID string = "|ContractID|"
+
 type Contract struct {
 	Schema  string        `json:"schema"`
 	Machine ptnet.Machine `json:"state_machine""`
@@ -42,12 +46,12 @@ type ContractState struct {
 }
 
 type Command struct {
-	ChainID    string `json:"chainid"`
-	ContractID string `json:"contractid"`
-	Schema     string `json:"schema"`
-	Action     string `json:"action"`
-	Amount     uint64 `json:"amount"`
-	Payload    []byte `json:"payload"`
+	ChainID    string
+	ContractID string
+	Schema     string
+	Action     string
+	Amount     uint64
+	Payload    []byte
 	Privkey    string
 	Pubkey     string
 }
@@ -153,19 +157,28 @@ func Exists(schema string, contractID string)  bool {
 	return raw != nil
 }
 
-func IsHalted(contract Declaration) bool {
-	txn := ptnet.Txn(contract.Schema, false)
-	raw, _ := txn.First(ptnet.StateTable, "id", contract.ContractID)
+func getContractState(schema string, contractID string) (ptnet.State, error) {
+	txn := ptnet.Txn(schema, false)
+	raw, _ := txn.First(ptnet.StateTable, "id", contractID)
 	if raw  == nil {
-		return false
+		return ptnet.State{}, errors.New("State not found")
 	}
+	return raw.(ptnet.State), nil
+}
 
-	// TODO also test that if there are open state machine actions the
-	// Guard roles should be tested to make sure action is available to contract
-	vectorIn := raw.(ptnet.State).Vector
+func canExecute(state ptnet.State, transition ptnet.Transition, multiplier uint64) bool {
+	_, err := ptnet.VectorAdd(state.Vector, transition, multiplier)
+	if err == nil {
+		return true
+	}
+	return false
+}
+
+func IsHalted(contract Declaration) bool {
+	state, _ := getContractState(contract.Schema, contract.ContractID)
 	for _, transition := range contract.Actions {
-		_, err := ptnet.VectorAdd(vectorIn, transition, 1)
-		if err == nil {
+		if canExecute(state, transition, 1) {
+			// FIXME test all available guard roles
 			return false
 		}
 	}
@@ -173,4 +186,17 @@ func IsHalted(contract Declaration) bool {
 	return true
 }
 
-// TODO: add Redeem Condition Checking
+func CanRedeem(contract Declaration, publicKey string) bool {
+	state, _ := getContractState(contract.Schema, contract.ContractID)
+	for i, condition := range contract.Conditions {
+		if contract.Outputs[i].Address != publicKey {
+			continue
+		}
+		if canExecute(state, ptnet.Transition(condition), 1) {
+			return true
+		}
+	}
+
+	return false
+}
+

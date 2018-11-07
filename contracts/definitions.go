@@ -2,12 +2,16 @@ package contracts
 
 import "github.com/FactomProject/ptnet-eventstore/ptnet"
 
+/*
+ contract fixtures (currently for testing) are defined in this file
+ eventually these structures will be stored on chain and indexed in memory when in use
+*/
+
+
 // define a deposit contract that makes an offer to 2 identities
 // provides a way to revoke payment by original sender
 // will only redeem once
 // tokens should be thought of as "pay-to-script" - locked until state machine is halted
-
-
 func OptionContract() Declaration {
 	m := ptnet.StateMachines["option-v1"]
 
@@ -39,17 +43,27 @@ func OptionContract() Declaration {
 	}
 }
 
+// FIXME replace w/ public addresses FAxxxx
+var DEPOSITOR string = "|DEPOSITOR|"
+var PLAYERX string = "|PLAYERX|"
+var PLAYERO string = "|PLAYERO|"
+
+// FIXME replace w/ private addresses FSxxxx
+var DEPOSITOR_SECRET string = "|DEPOSITOR_SECRET|"
+var PLAYERX_SECRET string = "|PLAYERX_SECRET|"
+var PLAYERO_SECRET string = "|PLAYERO_SECRET|"
+
 func TicTacToeContract() Declaration {
 	m := ptnet.StateMachines["octoe-v1"]
 
 	return Declaration{ // array of inputs/outputs also referenced by guards and conditions
 		Inputs: []Transaction{ // array of input depositors
-			Transaction{"|DEPOSITOR|", 1},
+			Transaction{DEPOSITOR, 1},
 		},
 		Outputs: []Transaction{ // array of possible redeemers
-			Transaction{"|DEPOSITOR|", 1},
-			Transaction{"|PLAYERX|", 1},
-			Transaction{"|PLAYERO|", 1},
+			Transaction{DEPOSITOR, 1},
+			Transaction{PLAYERX, 1},
+			Transaction{PLAYERO, 1},
 		},
 		BlockHeight: 60221409,  // deadline for halting state
 		Salt:        "|RANDOM|", // added random salt

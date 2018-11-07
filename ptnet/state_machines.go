@@ -3,10 +3,16 @@ package ptnet
 /*
 declare state machines
 REVIEW: consider loading definitions from file on demand
+
+These datastructures are re-usable componets that can be
+refrenced and integrated w/ smart contract definitions
+
+This may mean that part of this protocol is to pubish versioned
+state machines to a distinct revision-control chain on factom
 */
 
-const OptionV1 string = "option-v1"
-const OctoeV1 string = "octoe-v1"
+const OptionV1 string = "option-v1" // version contract definitions by using schema name
+const OctoeV1 string = "octoe-v1"   // this allows for future mechanism to 'upconvert' v1 -> v2
 
 var StateMachines map[string]Machine = map[string]Machine{
 	"counter": counterMachine,
@@ -16,7 +22,7 @@ var StateMachines map[string]Machine = map[string]Machine{
 
 // choice between 2 options with one approver
 var optionMachine Machine = Machine{
-	Initial: StateVector{1, 1, 1, 1, 1},
+	Initial: StateVector{1, 1, 1, 1, 1}, // use 'all ones' for initial vector
 	Transitions: map[string]Transition{
 		BEGIN:   Transition{0,-1,-1, 0,-1},  // unsure if we should introduce standard action names
 		"OPT_0": Transition{-1, 1, 0, 0, 0},  // pay addr[1]
@@ -28,6 +34,8 @@ var optionMachine Machine = Machine{
 }
 
 // this state machine never halts
+// simple counter structure used mostly for
+// testing & benchmarking state machine and eventstore
 var counterMachine Machine = Machine{
 	Initial: StateVector{1, 1},
 	Transitions: map[string]Transition{

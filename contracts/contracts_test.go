@@ -29,16 +29,11 @@ func AssertEqual(t *testing.T, a interface{}, b interface{}, msg string) {
 	}
 }
 
-var chainID string = "|ChainID|"
-var contractID string = "|ContractID|"
-var depositorKey string = "|DepositorSecret|"
-var playerXKey string = "|PlayerXSecret|"
-var playerOKey string = "|PlayerOSecret|"
-
-func commit(action string, key string) (*ptnet.Event, error) {
+// make commits and test for expected error outcome
+func commit(t *testing.T, action string, key string, expectError bool) (*ptnet.Event, error) {
 	event, err := contracts.Commit(contracts.Command{
-		ChainID:    chainID,
-		ContractID: contractID, // contract uuid
+		ChainID:    contracts.CHAIN_ID, // test values
+		ContractID: contracts.CONTRACT_ID,
 		Schema:     ptnet.OctoeV1, // state machine version
 		Action:     action, // state machine action
 		Amount:     1, // triggers input action 'n' times
@@ -46,52 +41,58 @@ func commit(action string, key string) (*ptnet.Event, error) {
 		Privkey:    key, // key used to sign event
 	})
 
+	var msg string
+	if expectError {
+		msg = "expected commit to return an error"
+	} else {
+		msg = "unexpected error"
+	}
+	AssertEqual(t, expectError, err != nil, msg)
 	return event, err
 }
 
-func TestTransactionSequence(t *testing.T) {
-	var event *ptnet.Event
-	var err error
-
+// create a new contract instance and validate resulting event
+func setUp(t *testing.T) contracts.Declaration {
 	contract := contracts.TicTacToeContract()
-	event, err = contracts.Create(contract) // FIXME event should be signed by depositor
+	event, err := contracts.Create(contract) // FIXME event should be signed by depositor
 	AssertNil(t, err)
-	AssertEqual(t, true, contracts.Exists(ptnet.OctoeV1, contractID), "Failed to retrieve contract declaration")
+	AssertEqual(t, true, contracts.Exists(ptnet.OctoeV1, contracts.CONTRACT_ID), "Failed to retrieve contract declaration")
 
-	AssertEqual(t, event.Oid, contractID, "")
+	AssertEqual(t, event.Oid, contracts.CONTRACT_ID, "")
 	AssertEqual(t, event.Action, ptnet.BEGIN, "")
 	AssertEqual(t, event.InputState, []uint64{1,1,1,1,1,1,1,1,1,1,1,1,1,1}, "")
 	AssertEqual(t, event.OutputState, []uint64{1,1,1,1,1,1,1,1,1,0,1,0,0,0}, "")
 
 	Assert(t, !contracts.IsHalted(contract))
+	return contract
+}
 
-	event, err = commit("X11", playerXKey)
-	AssertNil(t, err) // valid
+func TestTransactionSequence(t *testing.T) {
+	var expectValid bool = false
+	var expectError bool = true
 
-	_, err = commit("X22", playerXKey)
-	Assert(t, err != nil) // invalid because move is out of turn
+	contract := setUp(t)
 
-	_, err = commit("O11", playerOKey)
-	Assert(t, err != nil) // invalid because move is already taken
+	// start the game with a valid move
+	commit(t, "X11", contracts.PLAYERX_SECRET, expectValid)
 
+    commit(t, "X22", contracts.PLAYERX_SECRET, expectError) // out of turn
+	commit(t, "O11", contracts.PLAYERO_SECRET, expectError) // move taken already
 	// TODO: also test that events are rejected if signed by the wrong key
 
-	_, err = commit("O01", playerOKey)
-	AssertNil(t, err)
+	// more valid moves to finish the game
+	commit(t, "O01", contracts.PLAYERO_SECRET, expectValid)
+	commit(t, "X00", contracts.PLAYERX_SECRET, expectValid)
+	commit(t, "O02", contracts.PLAYERO_SECRET, expectValid)
+	commit(t, "X22", contracts.PLAYERX_SECRET, expectValid)
 
-	_, err = commit("X00", playerXKey)
-	AssertNil(t, err)
+	// depositor closes the game with a winner judgement
+	commit(t, "WINX", contracts.DEPOSITOR_SECRET, expectValid)
 
-	_, err = commit("O02", playerOKey)
-	AssertNil(t, err)
 
-	_, err = commit("X22", playerXKey)
-	AssertNil(t, err)
-
-	_, err = commit("WINX", depositorKey)
-	AssertNil(t, err)
-
+	// test conditions after halting state
 	Assert(t, contracts.IsHalted(contract))
-
-	// TODO: test that contract is redeemable by playerX
+	Assert(t, contracts.CanRedeem(contract, contracts.PLAYERX)) // redeemable by winner only
+	Assert(t, !contracts.CanRedeem(contract, contracts.PLAYERO))
+	Assert(t, !contracts.CanRedeem(contract, contracts.DEPOSITOR))
 }
