@@ -12,7 +12,7 @@ var emptyPayload []byte
 func main() {
 	emptyPayload, _ = json.Marshal(map[string]string{})
 	runTicTacToe() // a game of tic-tac-toe
-	//runOption()    // a simple contract with choice of output addresses
+	runOption()    // a simple contract with choice of output addresses
 }
 
 func marshal(x interface{}) []byte {
@@ -23,7 +23,7 @@ func marshal(x interface{}) []byte {
 func runOption() {
 	var event *ptnet.Event
 	contract := contracts.OptionContract()
-	event, _ = contracts.Create(contract)
+	event, _ = contracts.Create(contract, contracts.DEPOSITOR_SECRET)
 	println("event:")
 	println(string(marshal(event)))
 
@@ -37,8 +37,19 @@ func runOption() {
 	}
 
 	var err error
+	var key string
 
 	for _, action := range actionQueue {
+
+		switch action {
+		case "OPT_0":
+			key = contracts.USER1
+		case "OPT_1":
+			key = contracts.USER2
+		default :
+			key = contracts.DEPOSITOR
+		}
+
 		event, err = contracts.Commit(contracts.Command{ // FIXME add signing
 			ChainID:    "|ChainID|",
 			ContractID: "|ContractID|",
@@ -46,6 +57,8 @@ func runOption() {
 			Action:     action,       // state machine action
 			Amount:     1,            // triggers input action 'n' times
 			Payload:    emptyPayload, // arbitrary data optionally included
+			Pubkey:		key,
+			Privkey:	contracts.Identity[key],
 		})
 
 		if err != nil {
@@ -63,7 +76,7 @@ func runOption() {
 func runTicTacToe() {
 	var event *ptnet.Event
 	contract := contracts.TicTacToeContract()
-	event, _ = contracts.Create(contract)
+	event, _ = contracts.Create(contract, contracts.DEPOSITOR_SECRET)
 	println("event:")
 	println(string(marshal(event)))
 
@@ -81,7 +94,18 @@ func runTicTacToe() {
 	}
 
 	var err error
+	var key string
+
 	for _, action := range actionQueue {
+		switch action[0] {
+		case 'X':
+			key = contracts.PLAYERX
+		case 'O':
+			key = contracts.PLAYERO
+		default :
+			key = contracts.DEPOSITOR
+		}
+
 		event, err = contracts.Commit(contracts.Command{ // FIXME add signing
 			ChainID:    "|ChainID|",
 			ContractID: "|ContractID|", // contract uuid
@@ -89,6 +113,8 @@ func runTicTacToe() {
 			Action:     action,         // state machine action
 			Amount:     1,              // triggers input action 'n' times
 			Payload:    emptyPayload,   // arbitrary data optionally included
+			Pubkey:		key,
+			Privkey:	contracts.Identity[key],
 		})
 
 		if err != nil {

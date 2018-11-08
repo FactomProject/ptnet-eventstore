@@ -33,12 +33,6 @@ func AssertEqual(t *testing.T, a interface{}, b interface{}, msg string) {
 const expectValid bool = false
 const expectError bool = true
 
-var identities map[string]string = map[string]string{
-	contracts.PLAYERX:   contracts.PLAYERX_SECRET,
-	contracts.PLAYERO:   contracts.PLAYERO_SECRET,
-	contracts.DEPOSITOR: contracts.DEPOSITOR_SECRET,
-}
-
 // make commits and test for expected error outcome
 func commit(t *testing.T, action string, key string, expectError bool) (*ptnet.Event, error) {
 	event, err := contracts.Commit(contracts.Command{
@@ -48,7 +42,7 @@ func commit(t *testing.T, action string, key string, expectError bool) (*ptnet.E
 		Action:     action,          // state machine action
 		Amount:     1,               // triggers input action 'n' times
 		Payload:    nil,             // arbitrary data optionally included
-		Privkey:    identities[key], // key used to sign event
+		Privkey:    contracts.Identity[key], // key used to sign event
 		Pubkey:     key,
 	})
 
@@ -65,7 +59,7 @@ func commit(t *testing.T, action string, key string, expectError bool) (*ptnet.E
 // create a new contract instance and validate resulting event
 func setUp(t *testing.T) contracts.Declaration {
 	contract := contracts.TicTacToeContract()
-	event, err := contracts.Create(contract, identities[contracts.DEPOSITOR]) // FIXME event should be signed by depositor
+	event, err := contracts.Create(contract, contracts.Identity[contracts.DEPOSITOR]) // FIXME event should be signed by depositor
 	AssertNil(t, err)
 	AssertEqual(t, true, contracts.Exists(ptnet.OctoeV1, contracts.CONTRACT_ID), "Failed to retrieve contract declaration")
 

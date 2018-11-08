@@ -16,17 +16,17 @@ func OptionContract() Declaration {
 
 	return Declaration{ // array of inputs also referenced by guards and conditions
 		Inputs: []Transaction{ // array of input depositors
-			Transaction{"|DEPOSITOR|", 1}, // deposit tokens
+			Transaction{DEPOSITOR, 1}, // deposit tokens
 		},
 		Outputs: []Transaction{
-			Transaction{"|DEPOSITOR|", 1}, // withdraw token
-			Transaction{"|PUBKEY1|", 1},   // deposit to user1
-			Transaction{"|PUBKEY2|", 1},   // deposit to user2
+			Transaction{DEPOSITOR, 1}, // withdraw token
+			Transaction{USER1, 1},   // deposit to user1
+			Transaction{USER2, 1},   // deposit to user2
 		},
 		BlockHeight: 60221409,       // deadline for halting state
 		Salt:        "|RANDOM|",     // added random salt
-		ContractID:  "|ContractID|", // unique ID for this contract instance
-		Schema:      "option-v1",    // versioned contract schema
+		ContractID:  CONTRACT_ID, // unique ID for this contract instance
+		Schema:      ptnet.OptionV1,    // versioned contract schema
 		State:       m.Initial,      // state machine initial state
 		Actions:     m.Transitions,  // state machine defined transitions
 		Guards: []Condition{ // guard clause restricts actions
@@ -42,16 +42,6 @@ func OptionContract() Declaration {
 	}
 }
 
-// FIXME replace w/ public addresses FAxxxx
-var DEPOSITOR string = "|DEPOSITOR|"
-var PLAYERX string = "|PLAYERX|"
-var PLAYERO string = "|PLAYERO|"
-
-// FIXME replace w/ private addresses FSxxxx
-var DEPOSITOR_SECRET string = "|DEPOSITOR_SECRET|"
-var PLAYERX_SECRET string = "|PLAYERX_SECRET|"
-var PLAYERO_SECRET string = "|PLAYERO_SECRET|"
-
 func TicTacToeContract() Declaration {
 	m := ptnet.StateMachines["octoe-v1"]
 
@@ -66,7 +56,7 @@ func TicTacToeContract() Declaration {
 		},
 		BlockHeight: 60221409,       // deadline for halting state
 		Salt:        "|RANDOM|",     // added random salt
-		ContractID:  "|ContractID|", // unique ID for this contract instance
+		ContractID:  CONTRACT_ID, // unique ID for this contract instance
 		Schema:      "octoe-v1",     // versioned contract schema
 		State:       m.Initial,      // state machine initial state
 		Actions:     m.Transitions,  // state machine defined transitions
