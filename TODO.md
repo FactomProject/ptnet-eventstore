@@ -7,6 +7,7 @@ Allow aggregation of contracts to calculate wallet balances by account.
 ### BACKLOG
 
 - [ ] demo smart contract protocol creation and playback
+- [ ] target chain - adopt FAT standard for choosing a chainid to store a given event
 - [ ] signing/externalIDs - contracts should output an event as a valid factom entry
 - [ ] demo composing multiple state machines in a single contract
 - [ ] demo up-converting v1 -> v2 by extending the length of the statevector

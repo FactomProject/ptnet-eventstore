@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/go-memdb"
 )
 
-// KLUDGE values used for testing
+// KLUDGE mock values used for testing
 var CHAIN_ID string = "|ChainID|"
 var CONTRACT_ID string = "|ContractID|"
 
@@ -52,8 +52,8 @@ type Command struct {
 	Action     string
 	Amount     uint64
 	Payload    []byte
-	Privkey    string
-	Pubkey     string
+	Privkey    string // REVIEW do we need to pass both keys ?
+	Pubkey     string //        compare w/ factom identity standard
 }
 
 var Contracts map[string]Contract = map[string]Contract{
@@ -74,14 +74,22 @@ func Txn(schema string, write bool) *memdb.Txn {
 	return Contracts[schema].db.Txn(write)
 }
 
-func Create(contract Declaration) (*ptnet.Event, error) {
+func Create(contract Declaration, private_key string) (*ptnet.Event, error) {
 
 	payload, _ := json.MarshalIndent(contract, "", "    ")
 	//println("contract:")
 	//println(string(payload))
 
-	// FIXME sign this event
-	event, err := ptnet.Commit(contract.Schema, contract.ContractID, ptnet.BEGIN, 1, []byte(payload))
+	event, err := Commit(Command{
+		ChainID:    CHAIN_ID, // test values
+		ContractID: contract.ContractID,
+		Schema:     contract.Schema,
+		Action:     ptnet.BEGIN,     // state machine action
+		Amount:     1,               // triggers input action 'n' times
+		Payload:    []byte(payload), // arbitrary data optionally included
+		Privkey:    private_key,
+		Pubkey:     contract.Inputs[0].Address, // REVIEW: will there always be a single input?
+	})
 
 	if err != nil {
 		panic(err)
@@ -91,17 +99,16 @@ func Create(contract Declaration) (*ptnet.Event, error) {
 	err = txn.Insert(ContractTable, contract)
 	if err != nil {
 		panic(err)
-		//txn.Abort()
 	}
 	txn.Commit()
 
 	return event, err
 }
 
-func state(schema string, contractID string) (ptnet.State, error){
+func state(schema string, contractID string) (ptnet.State, error) {
 	txn := ptnet.Txn(schema, false)
 	raw, err := txn.First(ptnet.StateTable, "id", contractID)
-	if raw  == nil || err != nil {
+	if raw == nil || err != nil {
 		return ptnet.State{}, errors.New("missing state")
 	}
 
@@ -110,44 +117,41 @@ func state(schema string, contractID string) (ptnet.State, error){
 
 // validate event against guard conditions
 func evalGuards(event *ptnet.Event) error {
+	if event.Action == ptnet.BEGIN {
+		return nil
+	}
+
 	txn := Contracts[event.Schema].db.Txn(false)
 	raw, _ := txn.First(ContractTable, "id", event.Oid)
 
 	if raw == nil {
-		return errors.New("missing contract "+ event.Schema + "." + event.Oid)
+		return errors.New("missing contract " + event.Schema + "." + event.Oid)
 	}
 
 	c := raw.(Declaration)
 
 	currentState, _ := state(event.Schema, event.Oid)
 
-	// expect event to be signed
 	for i, g := range c.Guards {
-		_ , err := ptnet.VectorAdd(currentState.Vector, g, 1)
-		if err == nil {
-			if ptnet.ValidSignature(event, c.Outputs[i].Address) {
-				return nil
-			} else {
-				//fmt.Printf("guard[%v] => %v \n", i, c.Outputs[i].Address)
-			}
+		if ptnet.ValidSignature(event, c.Outputs[i].Address) {
+			_, err := ptnet.VectorAdd(currentState.Vector, g, 1)
+			return err
 		}
 	}
-	// FIXME actually restrict action if event is not signed w/ a valid key
-	//return errors.New("failed guard condition")
-	return nil
+	return errors.New("failed guard condition")
 }
 
 func Commit(cmd Command) (*ptnet.Event, error) {
-	return ptnet.Transform(cmd.Schema, cmd.ContractID, cmd.Action, cmd.Amount, cmd.Payload, func (evt *ptnet.Event) error {
+	return ptnet.Transform(cmd.Schema, cmd.ContractID, cmd.Action, cmd.Amount, cmd.Payload, func(evt *ptnet.Event) error {
 		// FIXME actually do signing
-		sig := fmt.Sprintf("signed with: %v",  cmd.Privkey)
+		sig := fmt.Sprintf("signed with: %v", cmd.Privkey)
 		ptnet.AddDigest(evt)
 		ptnet.AddSignature(evt, cmd.Pubkey, sig)
 		return evalGuards(evt)
 	})
 }
 
-func Exists(schema string, contractID string)  bool {
+func Exists(schema string, contractID string) bool {
 	txn := Contracts[schema].db.Txn(false)
 	raw, err := txn.First(ContractTable, "id", contractID)
 	if err != nil {
@@ -160,7 +164,7 @@ func Exists(schema string, contractID string)  bool {
 func getContractState(schema string, contractID string) (ptnet.State, error) {
 	txn := ptnet.Txn(schema, false)
 	raw, _ := txn.First(ptnet.StateTable, "id", contractID)
-	if raw  == nil {
+	if raw == nil {
 		return ptnet.State{}, errors.New("State not found")
 	}
 	return raw.(ptnet.State), nil
@@ -199,4 +203,3 @@ func CanRedeem(contract Declaration, publicKey string) bool {
 
 	return false
 }
-

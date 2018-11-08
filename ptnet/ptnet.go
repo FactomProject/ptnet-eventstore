@@ -92,16 +92,20 @@ func AddSignature(event *Event, pubkey string, sig string) {
 	if event.digest == nil {
 		panic("must add digest before affixing signature")
 	}
+
+	if pubkey == "" {
+		panic("pubkey not provided")
+	}
+
 	event.signatures = append(event.signatures, sig)
 	event.pubkeys = append(event.pubkeys, pubkey)
 }
 
 func ValidSignature(event *Event, pubkey string) bool {
-	for i, key := range event.pubkeys {
-		//fmt.Printf("validating sigs %v <=> %v\n", pubkey, key)
-		if key != "" { // FIXME: actually verify signature
-			_ = i
-			//return event.signatures[i] != ""
+	for _, key := range event.pubkeys {
+		if key == pubkey {
+			// FIXME: actually verify signature
+			//fmt.Printf("validating sigs %v <=> %v\n", pubkey, key)
 			return true
 		}
 	}
@@ -224,7 +228,8 @@ func applyTransform(machine Machine, event *Event, persistEvent bool, preconditi
 
 	err = precondition(event)
 	if err != nil {
-		panic(err)
+		txn.Abort()
+		return err
 	}
 
 	err = txn.Insert(StateTable, outState)

@@ -43,8 +43,8 @@ func runOption() {
 			ChainID:    "|ChainID|",
 			ContractID: "|ContractID|",
 			Schema:     ptnet.OptionV1,
-			Action:     action, // state machine action
-			Amount:     1, // triggers input action 'n' times
+			Action:     action,       // state machine action
+			Amount:     1,            // triggers input action 'n' times
 			Payload:    emptyPayload, // arbitrary data optionally included
 		})
 
@@ -85,10 +85,10 @@ func runTicTacToe() {
 		event, err = contracts.Commit(contracts.Command{ // FIXME add signing
 			ChainID:    "|ChainID|",
 			ContractID: "|ContractID|", // contract uuid
-			Schema:     ptnet.OctoeV1, // state machine version
-			Action:     action, // state machine action
-			Amount:     1, // triggers input action 'n' times
-			Payload:    emptyPayload, // arbitrary data optionally included
+			Schema:     ptnet.OctoeV1,  // state machine version
+			Action:     action,         // state machine action
+			Amount:     1,              // triggers input action 'n' times
+			Payload:    emptyPayload,   // arbitrary data optionally included
 		})
 
 		if err != nil {
