@@ -1,5 +1,5 @@
-hash: 6c6ee2f8e2ea09391f3ce72da4d255948320be47fb1a99d04b1727ebef6ab376
-updated: 2018-10-13T13:11:28.147481296-05:00
+hash: de996bb9291b8e2ee1f9240d8d51c3801c379725299e03cdc9dd9a3f321e1fe7
+updated: 2018-11-09T08:58:23.152749177-06:00
 imports:
 - name: github.com/FactomProject/goleveldb
   version: e7800c6976c5d75f0a9c5e9e0e2ff8086940e58f
@@ -9,10 +9,6 @@ imports:
   - leveldb/util
 - name: github.com/FactomProject/web
   version: 7daee1bf727fc2cd9142b9a73a797f98b3180756
-- name: github.com/golang/protobuf
-  version: aa810b61a9c79d51363740d207bb46cf8e620ed5
-  subpackages:
-  - protoc-gen-go
 - name: github.com/hashicorp/go-immutable-radix
   version: 27df80928bb34bb1b0d6d0e01b9e679902e7a6b5
 - name: github.com/hashicorp/go-memdb
@@ -25,6 +21,4 @@ imports:
   version: 1087133bc4af3073e18add999345c6ae75918503
   subpackages:
   - websocket
-- name: google.golang.org/grpc
-  version: 8dea3dc473e90c8179e519d91302d0597c0ca1d1
 testImports: []

@@ -6,3 +6,4 @@ vendor
 ptnetTest
 *.out
 *.log
+.ipynb_checkpoints

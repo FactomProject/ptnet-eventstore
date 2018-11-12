@@ -25,8 +25,8 @@ var optionMachine Machine = Machine{
 	Initial: StateVector{1, 1, 1, 1, 1}, // use 'all ones' for initial vector
 	Transitions: map[string]Transition{
 		BEGIN:   Transition{0, -1, -1, 0, -1}, // unsure if we should introduce standard action names
-		"OPT_0": Transition{-1, 1, 0, 0, 0},   // pay addr[1]
-		"OPT_1": Transition{-1, 0, 1, 0, 0},   // pay addr[2]
+		"OPT_1": Transition{-1, 1, 0, 0, 0},   // pay addr[1]
+		"OPT_2": Transition{-1, 0, 1, 0, 0},   // pay addr[2]
 		CANCEL:  Transition{-1, 0, 0, -1, 1},  // refund pay addr[0] - use like exit code
 		END:     Transition{0, 0, 0, -1, 0},   // confirm transaction
 	},

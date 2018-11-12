@@ -42,9 +42,9 @@ type Event struct {
 	InputState  StateVector `json:"input"`
 	OutputState StateVector `json:"output"`
 	Payload     []byte      `json:"payload"`
-	pubkeys      []string // pubkey used to verify signature
-	signatures  []string // signatures
-	digest     []byte
+	pubkeys     []string    // pubkey used to verify signature
+	signatures  []string    // signatures
+	digest      []byte
 	entryhash   string
 }
 
@@ -71,7 +71,7 @@ func Commit(schema string, oid string, action string, value uint64, payload []by
 	return &event, err
 }
 
-func Transform(schema string, oid string, action string, value uint64, payload []byte, beforeCommitCallback func(*Event) error ) (*Event, error) {
+func Transform(schema string, oid string, action string, value uint64, payload []byte, beforeCommitCallback func(*Event) error) (*Event, error) {
 
 	event := Event{
 		Timestamp:   uint64(time.Now().UnixNano()),
@@ -143,21 +143,12 @@ func decodeEvent(b *bytes.Buffer) *Event {
 	return a
 }
 
-func storagePersist(evt *Event) {
-	// FIXME store in leveldb
-	data := encodeEvent(evt)
-	_ = data
-	//fmt.Printf("storagePersist => %v\n", decodeEvent(data))
-}
-
-func blockchainPersist(evt *Event) {
-	// FIXME push event factomd
-	//fmt.Printf("blockchainPersist => %v\n", evt)
-}
-
 func afterCommit(evt *Event) {
-	storagePersist(evt)
-	go blockchainPersist(evt)
+	// REVIEW: consider storing event in DB
+	/*
+	data := encodeEvent(evt)
+	fmt.Printf("storagePersist => %v\n", decodeEvent(data))
+	*/
 }
 
 func beforeCommit(evt *Event) error {
@@ -226,6 +217,7 @@ func applyTransform(machine Machine, event *Event, persistEvent bool, preconditi
 		return err
 	}
 
+	AddDigest(event)
 	err = precondition(event)
 	if err != nil {
 		txn.Abort()

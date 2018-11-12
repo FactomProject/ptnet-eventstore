@@ -1,6 +1,7 @@
-package contracts
+package contract
 
 import "github.com/FactomProject/ptnet-eventstore/ptnet"
+import . "github.com/FactomProject/ptnet-eventstore/identity"
 
 /*
  contract fixtures (currently for testing) are defined in this file
@@ -15,18 +16,18 @@ func OptionContract() Declaration {
 	m := ptnet.StateMachines["option-v1"]
 
 	return Declaration{ // array of inputs also referenced by guards and conditions
-		Inputs: []Transaction{ // array of input depositors
-			Transaction{DEPOSITOR, 1}, // deposit tokens
+		Inputs: []AddressAmountMap{ // array of input depositors
+			AddressAmountMap{DEPOSITOR, 1}, // deposit tokens
 		},
-		Outputs: []Transaction{
-			Transaction{DEPOSITOR, 1}, // withdraw token
-			Transaction{USER1, 1},   // deposit to user1
-			Transaction{USER2, 1},   // deposit to user2
+		Outputs: []AddressAmountMap{
+			AddressAmountMap{DEPOSITOR, 1}, // withdraw token
+			AddressAmountMap{USER1, 1},     // deposit to user1
+			AddressAmountMap{USER2, 1},     // deposit to user2
 		},
 		BlockHeight: 60221409,       // deadline for halting state
 		Salt:        "|RANDOM|",     // added random salt
-		ContractID:  CONTRACT_ID, // unique ID for this contract instance
-		Schema:      ptnet.OptionV1,    // versioned contract schema
+		ContractID:  CONTRACT_ID,    // unique ID for this contract instance
+		Schema:      ptnet.OptionV1, // versioned contract schema
 		State:       m.Initial,      // state machine initial state
 		Actions:     m.Transitions,  // state machine defined transitions
 		Guards: []Condition{ // guard clause restricts actions
@@ -46,20 +47,20 @@ func TicTacToeContract() Declaration {
 	m := ptnet.StateMachines["octoe-v1"]
 
 	return Declaration{ // array of inputs/outputs also referenced by guards and conditions
-		Inputs: []Transaction{ // array of input depositors
-			Transaction{DEPOSITOR, 1},
+		Inputs: []AddressAmountMap{ // array of input depositors
+			AddressAmountMap{DEPOSITOR, 1},
 		},
-		Outputs: []Transaction{ // array of possible redeemers
-			Transaction{DEPOSITOR, 1},
-			Transaction{PLAYERX, 1},
-			Transaction{PLAYERO, 1},
+		Outputs: []AddressAmountMap{ // array of possible redeemers
+			AddressAmountMap{DEPOSITOR, 1},
+			AddressAmountMap{PLAYERX, 1},
+			AddressAmountMap{PLAYERO, 1},
 		},
-		BlockHeight: 60221409,       // deadline for halting state
-		Salt:        "|RANDOM|",     // added random salt
-		ContractID:  CONTRACT_ID, // unique ID for this contract instance
-		Schema:      "octoe-v1",     // versioned contract schema
-		State:       m.Initial,      // state machine initial state
-		Actions:     m.Transitions,  // state machine defined transitions
+		BlockHeight: 60221409,      // deadline for halting state
+		Salt:        "|RANDOM|",    // added random salt
+		ContractID:  CONTRACT_ID,   // unique ID for this contract instance
+		Schema:      "octoe-v1",    // versioned contract schema
+		State:       m.Initial,     // state machine initial state
+		Actions:     m.Transitions, // state machine defined transitions
 		Guards: []Condition{ // guard clause restricts actions
 			//       00 01 02 10 11 12 20 21 22  O  X $O $X $DEP // variable labels
 			Condition{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  // Admin - 'contract owner' can take action at any time

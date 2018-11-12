@@ -2,18 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/FactomProject/ptnet-eventstore/contracts"
+	"github.com/FactomProject/ptnet-eventstore/contract"
+	. "github.com/FactomProject/ptnet-eventstore/identity"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
 )
 
 var emptyPayload []byte
-
-// execute test transactions
-func main() {
-	emptyPayload, _ = json.Marshal(map[string]string{})
-	runTicTacToe() // a game of tic-tac-toe
-	runOption()    // a simple contract with choice of output addresses
-}
 
 func marshal(x interface{}) []byte {
 	data, _ := json.MarshalIndent(x, "", "    ")
@@ -22,17 +16,17 @@ func marshal(x interface{}) []byte {
 
 func runOption() {
 	var event *ptnet.Event
-	contract := contracts.OptionContract()
-	event, _ = contracts.Create(contract, contracts.DEPOSITOR_SECRET)
+	c := contract.OptionContract()
+	event, _ = contract.CreateAndSign(c, contract.CHAIN_ID, DEPOSITOR_SECRET)
 	println("event:")
 	println(string(marshal(event)))
 
 	var actionQueue []string = []string{
-		"OPT_0",
+		"OPT_1",
 		"HALT",
 	}
 
-	if false == contracts.IsHalted(contract) {
+	if false == contract.IsHalted(c) {
 		println("Contract is not halted")
 	}
 
@@ -42,24 +36,23 @@ func runOption() {
 	for _, action := range actionQueue {
 
 		switch action {
-		case "OPT_0":
-			key = contracts.USER1
 		case "OPT_1":
-			key = contracts.USER2
-		default :
-			key = contracts.DEPOSITOR
+			key = USER1
+		case "OPT_2":
+			key = USER2
+		default:
+			key = DEPOSITOR
 		}
 
-		event, err = contracts.Commit(contracts.Command{ // FIXME add signing
+		event, err = contract.Commit(contract.Command{ // FIXME add signing
 			ChainID:    "|ChainID|",
 			ContractID: "|ContractID|",
 			Schema:     ptnet.OptionV1,
 			Action:     action,       // state machine action
 			Amount:     1,            // triggers input action 'n' times
 			Payload:    emptyPayload, // arbitrary data optionally included
-			Pubkey:		key,
-			Privkey:	contracts.Identity[key],
-		})
+			Pubkey:     key,
+		}, Identity[key])
 
 		if err != nil {
 			panic(err)
@@ -68,15 +61,15 @@ func runOption() {
 		println(string(marshal(event)))
 	}
 
-	if contracts.IsHalted(contract) {
+	if contract.IsHalted(c) {
 		print("Contract is halted")
 	}
 }
 
 func runTicTacToe() {
 	var event *ptnet.Event
-	contract := contracts.TicTacToeContract()
-	event, _ = contracts.Create(contract, contracts.DEPOSITOR_SECRET)
+	c := contract.TicTacToeContract()
+	event, _ = contract.CreateAndSign(c, contract.CHAIN_ID, DEPOSITOR_SECRET)
 	println("event:")
 	println(string(marshal(event)))
 
@@ -89,7 +82,7 @@ func runTicTacToe() {
 		"WINX",
 	}
 
-	if false == contracts.IsHalted(contract) {
+	if false == contract.IsHalted(c) {
 		println("Contract is not halted")
 	}
 
@@ -99,23 +92,22 @@ func runTicTacToe() {
 	for _, action := range actionQueue {
 		switch action[0] {
 		case 'X':
-			key = contracts.PLAYERX
+			key = PLAYERX
 		case 'O':
-			key = contracts.PLAYERO
-		default :
-			key = contracts.DEPOSITOR
+			key = PLAYERO
+		default:
+			key = DEPOSITOR
 		}
 
-		event, err = contracts.Commit(contracts.Command{ // FIXME add signing
+		event, err = contract.Commit(contract.Command{ // FIXME add signing
 			ChainID:    "|ChainID|",
 			ContractID: "|ContractID|", // contract uuid
 			Schema:     ptnet.OctoeV1,  // state machine version
 			Action:     action,         // state machine action
 			Amount:     1,              // triggers input action 'n' times
 			Payload:    emptyPayload,   // arbitrary data optionally included
-			Pubkey:		key,
-			Privkey:	contracts.Identity[key],
-		})
+			Pubkey:     key,
+		}, Identity[key])
 
 		if err != nil {
 			panic(err)
@@ -124,8 +116,15 @@ func runTicTacToe() {
 		println(string(marshal(event)))
 	}
 
-	if contracts.IsHalted(contract) {
+	if contract.IsHalted(c) {
 		print("Contract is halted")
 	}
 
+}
+
+// execute test transactions
+func main() {
+	emptyPayload, _ = json.Marshal(map[string]string{})
+	runTicTacToe() // a game of tic-tac-toe
+	runOption()    // a simple contract with choice of output addresses
 }

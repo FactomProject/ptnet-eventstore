@@ -1,4 +1,4 @@
-package contracts
+package contract
 
 import (
 	"github.com/hashicorp/go-memdb"

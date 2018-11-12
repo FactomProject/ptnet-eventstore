@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/FactomProject/ptnet-eventstore/contracts"
+	"github.com/FactomProject/ptnet-eventstore/contract"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
 	"github.com/FactomProject/web"
 	"io/ioutil"
@@ -87,7 +87,7 @@ func stream(ctx *web.Context, schema string, oid string) {
 
 // get contract definition
 func contractMachine(ctx *web.Context, schema string) {
-	data, _ := json.Marshal(contracts.Contracts[schema])
+	data, _ := json.Marshal(contract.Contracts[schema])
 	ctx.ResponseWriter.Write(data)
 }
 
