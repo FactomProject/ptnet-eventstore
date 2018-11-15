@@ -1,35 +1,13 @@
 package contract_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/FactomProject/ptnet-eventstore/contract"
 	. "github.com/FactomProject/ptnet-eventstore/identity"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
-
-func Assert(t *testing.T, a interface{}) {
-	if a != true {
-		t.Fatalf("%v != %v", a, nil)
-	}
-}
-
-func AssertNil(t *testing.T, a interface{}) {
-	if a != nil {
-		t.Fatalf("%v != %v", a, nil)
-	}
-}
-
-func AssertEqual(t *testing.T, a interface{}, b interface{}, msg string) {
-	x, _ := json.Marshal(a)
-	y, _ := json.Marshal(b)
-	lhs := string(x)
-	rhs := string(y)
-	if lhs != rhs {
-		t.Fatalf("%v != %v  %s", lhs, rhs, msg)
-	}
-}
 
 const expectValid bool = false
 const expectError bool = true
@@ -52,7 +30,7 @@ func commit(t *testing.T, action string, key string, expectError bool) (*ptnet.E
 	} else {
 		msg = fmt.Sprintf("unexpected from action %v ", action)
 	}
-	AssertEqual(t, expectError, err != nil, msg)
+	assert.Equal(t, expectError, err != nil, msg)
 	return event, err
 }
 
@@ -61,13 +39,13 @@ func TestTransactionSequence(t *testing.T) {
 
 	t.Run("publish offer", func(t *testing.T) {
 		event, err := contract.CreateAndSign(c, contract.CHAIN_ID, Identity[DEPOSITOR])
-		AssertNil(t, err)
-		AssertEqual(t, true, contract.Exists(ptnet.OctoeV1, contract.CONTRACT_ID), "Failed to retrieve contract declaration")
-		AssertEqual(t, event.Oid, contract.CONTRACT_ID, "")
-		AssertEqual(t, event.Action, ptnet.BEGIN, "")
-		AssertEqual(t, event.InputState, []uint64{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, "")
-		AssertEqual(t, event.OutputState, []uint64{1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0}, "")
-		Assert(t, !contract.IsHalted(c))
+		assert.Nil(t, err)
+		assert.Equal(t, true, contract.Exists(ptnet.OctoeV1, contract.CONTRACT_ID), "Failed to retrieve contract declaration")
+		assert.Equal(t, event.Oid, contract.CONTRACT_ID, "")
+		assert.Equal(t, event.Action, ptnet.BEGIN, "")
+		assert.Equal(t, event.InputState, ptnet.StateVector{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1})
+		assert.Equal(t, event.OutputState, ptnet.StateVector{1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0})
+		assert.False(t, contract.IsHalted(c))
 	})
 
 
@@ -91,9 +69,9 @@ func TestTransactionSequence(t *testing.T) {
 
 	t.Run("redeem completed contract", func(t *testing.T) {
 		// test conditions after halting state
-		Assert(t, contract.IsHalted(c))
-		Assert(t, contract.CanRedeem(c, PLAYERX)) // redeemable by winner only
-		Assert(t, !contract.CanRedeem(c, PLAYERO))
-		Assert(t, !contract.CanRedeem(c, DEPOSITOR))
+		assert.True(t, contract.IsHalted(c))
+		assert.True(t, contract.CanRedeem(c, PLAYERX)) // redeemable by winner only
+		assert.False(t, contract.CanRedeem(c, PLAYERO))
+		assert.False(t, contract.CanRedeem(c, DEPOSITOR))
 	})
 }

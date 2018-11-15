@@ -1,37 +1,14 @@
 package finite_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/FactomProject/ptnet-eventstore/contract"
 	"github.com/FactomProject/ptnet-eventstore/finite"
 	. "github.com/FactomProject/ptnet-eventstore/identity"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
-
-func Assert(t *testing.T, a interface{}) {
-	if a != true {
-		t.Fatalf("%v != %v", a, nil)
-	}
-}
-
-func AssertNil(t *testing.T, a interface{}) {
-	if a != nil {
-		t.Fatalf("%v != %v", a, nil)
-	}
-}
-
-func AssertEqual(t *testing.T, a interface{}, b interface{}, msg string) {
-	x, _ := json.Marshal(a)
-	y, _ := json.Marshal(b)
-	lhs := string(x)
-	rhs := string(y)
-	if lhs != rhs {
-		t.Fatalf("%v != %v  %s", lhs, rhs, msg)
-	}
-}
-
 const expectValid bool = false
 const expectError bool = true
 
@@ -55,7 +32,7 @@ func commit(t *testing.T, action string, key string, expectError bool) (finite.T
 	} else {
 		msg = fmt.Sprintf("unexpected from action %v ", action)
 	}
-	AssertEqual(t, expectError, err != nil, msg)
+	assert.Equal(t, expectError, err != nil, msg)
 	return txn, err
 }
 
@@ -64,12 +41,12 @@ func TestTransactionSequence(t *testing.T) {
 
 	t.Run("publish offer", func(t *testing.T) {
 		txn := finite.OfferTransaction(offer, Identity[DEPOSITOR])
-		AssertEqual(t, true, contract.Exists(offer.Schema, contract.CONTRACT_ID), "missing declaration")
-		AssertEqual(t, txn.Oid, contract.CONTRACT_ID, "")
-		AssertEqual(t, txn.Action, ptnet.BEGIN, "")
-		AssertEqual(t, txn.InputState, []uint64{1, 1, 1, 1, 1}, "")
-		AssertEqual(t, txn.OutputState, []uint64{1, 0, 0, 1, 0}, "")
-		Assert(t, !contract.IsHalted(offer.Declaration))
+		assert.Equal(t, true, contract.Exists(offer.Schema, contract.CONTRACT_ID), "missing declaration")
+		assert.Equal(t, txn.Oid, contract.CONTRACT_ID, "")
+		assert.Equal(t, txn.Action, ptnet.BEGIN, "")
+		assert.Equal(t, txn.InputState, ptnet.StateVector{1, 1, 1, 1, 1})
+		assert.Equal(t, txn.OutputState, ptnet.StateVector{1, 0, 0, 1, 0})
+		assert.False(t, contract.IsHalted(offer.Declaration))
 	})
 
 	t.Run("execute transactions to accept offer", func(t *testing.T) {
@@ -79,9 +56,9 @@ func TestTransactionSequence(t *testing.T) {
 	})
 
 	t.Run("redeem completed contract", func(t *testing.T) {
-		Assert(t, contract.IsHalted(offer.Declaration))
-		Assert(t, contract.CanRedeem(offer.Declaration, USER1))
-		Assert(t, !contract.CanRedeem(offer.Declaration, DEPOSITOR))
-		Assert(t, !contract.CanRedeem(offer.Declaration, USER2))
+		assert.True(t, contract.IsHalted(offer.Declaration))
+		assert.True(t, contract.CanRedeem(offer.Declaration, USER1))
+		assert.False(t, contract.CanRedeem(offer.Declaration, DEPOSITOR))
+		assert.False(t, contract.CanRedeem(offer.Declaration, USER2))
 	})
 }
