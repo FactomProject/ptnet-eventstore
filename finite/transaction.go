@@ -40,18 +40,14 @@ func OfferTransaction(o Offer, privkey string) Transaction {
 	return Transaction{Event: event}
 }
 
-func ExecuteTransaction(x Execution, privkey string) Transaction {
+func ExecuteTransaction(x Execution, privkey string) (Transaction, error) {
 	event, err := contract.Transform(x.Command, func(evt *ptnet.Event) error {
 		sig := fmt.Sprintf("signed with: %v", privkey)
 		contract.SignEvent(evt, Executor(x), sig)
 		return nil
 	})
 
-	if err != nil {
-		panic("failed to create contract")
-	}
-
-	return Transaction{Event: event}
+	return Transaction{Event: event}, err
 }
 
 // FIXME actually do signing
