@@ -29,6 +29,7 @@ SOFTWARE.
 
 
 The following software may be included in this product:
+testify, Copyright (c) 2012 - 2013 Mat Ryer and Tyler Bunnell
 basen, Copyright (c) 2014, Casey Marshall
 bolt, Copyright (c) 2013, Ben Johnson
 go-bip32, Copyright (c) 2014, Tyler Smith

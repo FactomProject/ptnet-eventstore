@@ -6,12 +6,14 @@ Allow aggregation of contracts to calculate wallet balances by account.
 
 ### BACKLOG
 
-- [ ] model w/ protobuff
 - [ ] demo smart contract protocol creation and playback
 - [ ] target chain - adopt FAT standard for choosing a chainid to store a given event
 - [ ] signing/externalIDs - contracts should output an event as a valid factom entry
 - [ ] demo composing multiple state machines in a single contract
 - [ ] demo up-converting v1 -> v2 by extending the length of the statevector
+- [ ] update to work with factom connect or factomd to publish transactions
+- [ ] use testify/mocks rather than hardcoded literals in contract/definitions.go  finite/definitions.go
+- [ ] use testify/mocks rather than literals in identity package 
 
 ### COMPLETE
  
@@ -41,4 +43,4 @@ Allow aggregation of contracts to calculate wallet balances by account.
 - [ ] 'cache miss' should result when a state record is not found in memory
 - [ ] push events to harmony API
 - [ ] demonstrate a single game of tic-tac-toe by OID using 2 agents + arbiter over blockchain
-
+- [ ] ? model w/ protobuff & add a gRPC service ? REVIEW
