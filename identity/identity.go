@@ -1,28 +1,69 @@
+// Package identity contains public & private keys used for testing
 package identity
 
-// FIXME public addresses FAxxxx
-// FIXME private addresses FSxxxx
+import (
+	"github.com/FactomProject/ptnet-eventstore/x"
+)
 
-var DEPOSITOR string = "|DEPOSITOR|"
-var DEPOSITOR_SECRET string = "|DEPOSITOR_SECRET|"
+type PrivateKey [64]byte
+type PublicKey [32]byte
+type FctAddress []byte
 
-var USER1 string = "|USER1|"
-var USER1_SECRET string = "|USER1_SECRET|"
+func NewPrivateKey(seed uint64) PrivateKey {
+	n := x.NewPrivateKey(seed)
+	k := PrivateKey{}
+	copy(k[:], n)
+	return k
+}
 
-var USER2 string = "|USER2|"
-var USER2_SECRET string = "|USER2_SECRET|"
+func PrivateKeyToPub(priv PrivateKey) PublicKey {
+	n := x.PrivateKeyToPub(priv[:])
+	k := PublicKey{}
+	copy(k[:], n)
+	return k
+}
 
-var PLAYERX string = "|PLAYERX|"
-var PLAYERX_SECRET string = "|PLAYERX_SECRET|"
+var DEPOSITOR string = "DEPOSITOR"
+var USER1 string = "USER1"
+var USER2 string = "USER2"
+var PLAYERX string = "PLAYERX"
+var PLAYERO string = "PLAYERO"
 
-var PLAYERO string = "|PLAYERO|"
-var PLAYERO_SECRET string = "|PLAYERO_SECRET|"
+var Private = map[string]PrivateKey{
+	DEPOSITOR: NewPrivateKey(10000),
+	USER1: NewPrivateKey(10001),
+	USER2: NewPrivateKey(10002),
+	PLAYERX: NewPrivateKey(10003),
+	PLAYERO: NewPrivateKey(10004),
+}
 
-// KLUDGE: public/private keypairs for testing
-var Identity map[string]string = map[string]string{
-	DEPOSITOR: DEPOSITOR_SECRET,
-	PLAYERX:   PLAYERX_SECRET,
-	PLAYERO:   PLAYERO_SECRET,
-	USER1:     USER1_SECRET,
-	USER2:     USER2_SECRET,
+var Public = map[string]PublicKey{
+	DEPOSITOR: PrivateKeyToPub(Private[DEPOSITOR]),
+	USER1: PrivateKeyToPub(Private[USER1]),
+	USER2: PrivateKeyToPub(Private[USER2]),
+	PLAYERX: PrivateKeyToPub(Private[PLAYERX]),
+	PLAYERO: PrivateKeyToPub(Private[PLAYERO]),
+}
+var Address = map[string]FctAddress{
+	DEPOSITOR: PublicKeyToAddress(Public[DEPOSITOR]),
+	USER1: PublicKeyToAddress(Public[USER1]),
+	USER2: PublicKeyToAddress(Public[USER2]),
+	PLAYERX: PublicKeyToAddress(Public[PLAYERX]),
+	PLAYERO: PublicKeyToAddress(Public[PLAYERO]),
+}
+
+func PublicKeyToAddress(publicKey PublicKey) []byte {
+	data := []byte{1}
+	data = append(data, publicKey[:]...)
+	return x.Shad(data)
+}
+
+func (p PublicKey) MatchesAddress(address FctAddress) bool {
+	a := PublicKeyToAddress(p)
+	for offset, c := range address {
+		if a[offset] != c {
+			return false
+		}
+	}
+	return true
 }

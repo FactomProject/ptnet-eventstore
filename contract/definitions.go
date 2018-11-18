@@ -17,16 +17,16 @@ func OptionContract() Declaration {
 
 	return Declaration{ // array of inputs also referenced by guards and conditions
 		Inputs: []AddressAmountMap{ // array of input depositors
-			AddressAmountMap{DEPOSITOR, 1}, // deposit tokens
+			AddressAmountMap{Address[DEPOSITOR], 1}, // deposit tokens
 		},
 		Outputs: []AddressAmountMap{
-			AddressAmountMap{DEPOSITOR, 1}, // withdraw token
-			AddressAmountMap{USER1, 1},     // deposit to user1
-			AddressAmountMap{USER2, 1},     // deposit to user2
+			AddressAmountMap{Address[DEPOSITOR], 1}, // withdraw token
+			AddressAmountMap{Address[USER1], 1},     // deposit to user1
+			AddressAmountMap{Address[USER2], 1},     // deposit to user2
 		},
 		BlockHeight: 60221409,       // deadline for halting state
 		Salt:        "|RANDOM|",     // added random salt
-		ContractID:  CONTRACT_ID,    // unique ID for this contract instance
+		ContractID:  "|OptionContractID|",   // unique ID for this contract instance
 		Schema:      ptnet.OptionV1, // versioned contract schema
 		State:       m.Initial,      // state machine initial state
 		Actions:     m.Transitions,  // state machine defined transitions
@@ -48,16 +48,16 @@ func TicTacToeContract() Declaration {
 
 	return Declaration{ // array of inputs/outputs also referenced by guards and conditions
 		Inputs: []AddressAmountMap{ // array of input depositors
-			AddressAmountMap{DEPOSITOR, 1},
+			AddressAmountMap{Address[DEPOSITOR], 1},
 		},
 		Outputs: []AddressAmountMap{ // array of possible redeemers
-			AddressAmountMap{DEPOSITOR, 1},
-			AddressAmountMap{PLAYERX, 1},
-			AddressAmountMap{PLAYERO, 1},
+			AddressAmountMap{Address[DEPOSITOR], 1},
+			AddressAmountMap{Address[PLAYERX], 1},
+			AddressAmountMap{Address[PLAYERO], 1},
 		},
 		BlockHeight: 60221409,      // deadline for halting state
 		Salt:        "|RANDOM|",    // added random salt
-		ContractID:  CONTRACT_ID,   // unique ID for this contract instance
+		ContractID:  "|OctoeContractID|",   // unique ID for this contract instance
 		Schema:      "octoe-v1",    // versioned contract schema
 		State:       m.Initial,     // state machine initial state
 		Actions:     m.Transitions, // state machine defined transitions

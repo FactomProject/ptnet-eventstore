@@ -1,10 +1,9 @@
 package finite
 
 import (
-	"fmt"
 	"github.com/FactomProject/ptnet-eventstore/contract"
+	"github.com/FactomProject/ptnet-eventstore/identity"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
-	"github.com/FactomProject/ptnet-eventstore/x"
 )
 
 type Offer struct{
@@ -18,18 +17,19 @@ type Transaction struct{
 	*ptnet.Event
 }
 
-func Depositor(o Offer) string {
-	return o.Declaration.Inputs[0].Address
+func Depositor(o Offer) identity.PrivateKey {
+	// FIXME actually return the proper key
+	return identity.PrivateKey{}
 }
 
-func Executor(x Execution) string {
-	return x.Pubkey
+func Executor(x Execution) identity.PrivateKey {
+	// FIXME actually return the proper key
+	return identity.PrivateKey{}
 }
 
-func OfferTransaction(o Offer, privkey string) Transaction {
+func OfferTransaction(o Offer, privkey identity.PrivateKey) Transaction {
 	event, err := contract.Create(o.Declaration, o.ChainID, func(evt *ptnet.Event) error {
-		sig := fmt.Sprintf("signed with: %v", privkey)
-		contract.SignEvent(evt, Depositor(o), sig)
+		contract.SignEvent(evt, Depositor(o))
 		return nil
 	})
 
@@ -40,41 +40,11 @@ func OfferTransaction(o Offer, privkey string) Transaction {
 	return Transaction{Event: event}
 }
 
-func ExecuteTransaction(x Execution, privkey string) (Transaction, error) {
+func ExecuteTransaction(x Execution, privkey identity.PrivateKey) (Transaction, error) {
 	event, err := contract.Transform(x.Command, func(evt *ptnet.Event) error {
-		sig := fmt.Sprintf("signed with: %v", privkey)
-		contract.SignEvent(evt, Executor(x), sig)
+		contract.SignEvent(evt, Executor(x))
 		return nil
 	})
 
 	return Transaction{Event: event}, err
-}
-
-// FIXME actually do signing
-func fooSignMe() {
-
-	testData := x.Sha([]byte("sig first half  one")).Bytes()
-	priv := x.NewPrivKey(0)
-
-	sig := x.NewED25519Signature(priv, testData)
-
-	pub := x.PrivateKeyToEDPub(priv)
-	pub2 := [32]byte{}
-	copy(pub2[:], pub)
-
-	s := sig.Signature
-	valid := x.VerifyCanonical(&pub2, testData, &s)
-	if valid == false {
-		panic("Signature is invalid")
-	}
-
-	priv2 := [64]byte{}
-	copy(priv2[:], append(priv, pub...)[:])
-
-	sig2 := x.Sign(&priv2, testData)
-
-	valid = x.VerifyCanonical(&pub2, testData, sig2)
-	if valid == false {
-		panic("Test signature is invalid")
-	}
 }

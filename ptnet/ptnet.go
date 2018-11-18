@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/FactomProject/ptnet-eventstore/identity"
 	"github.com/hashicorp/go-memdb"
 	"time"
 )
@@ -34,18 +35,18 @@ type Machine struct {
 }
 
 type Event struct {
-	Timestamp   uint64      `json:"timestamp"`
-	Schema      string      `json:"schema"`
-	Action      string      `json:"action"`
-	Oid         string      `json:"oid"`
-	Value       uint64      `json:"value"`
-	InputState  StateVector `json:"input"`
-	OutputState StateVector `json:"output"`
-	Payload     []byte      `json:"payload"`
-	pubkeys     []string    // pubkey used to verify signature
-	signatures  []string    // signatures
-	digest      []byte
-	entryhash   string
+	Timestamp   uint64               `json:"timestamp"`
+	Schema      string               `json:"schema"`
+	Action      string               `json:"action"`
+	Oid         string               `json:"oid"`
+	Value       uint64               `json:"value"`
+	InputState  StateVector          `json:"input"`
+	OutputState StateVector          `json:"output"`
+	Payload     []byte               `json:"payload"`
+	pubkeys     []identity.PublicKey // TODO
+	signatures [][]byte // signatures
+	digest     []byte
+	entryhash  string
 }
 
 // start a new transaction with in-memory db
@@ -88,38 +89,34 @@ func Transform(schema string, oid string, action string, value uint64, payload [
 	return &event, err
 }
 
-func AddSignature(event *Event, pubkey string, sig string) {
+func AddSignature(event *Event, publicKey identity.PublicKey, sig []byte) {
 	if event.digest == nil {
 		panic("must add digest before affixing signature")
 	}
 
-	if pubkey == "" {
-		panic("pubkey not provided")
-	}
-
+	event.pubkeys = append(event.pubkeys, publicKey)
 	event.signatures = append(event.signatures, sig)
-	event.pubkeys = append(event.pubkeys, pubkey)
 }
 
-func ValidSignature(event *Event, pubkey string) bool {
+func (event *Event) SignatureValid(address []byte) bool {
+	// TODO: also validate sig against pubkey
+	// or consider doing this validation in the contract layer
 	for _, key := range event.pubkeys {
-		if key == pubkey {
-			// FIXME: actually verify signature
-			//fmt.Printf("validating sigs %v <=> %v\n", pubkey, key)
+		if key.MatchesAddress(address) {
 			return true
 		}
 	}
 	return false
 }
 
-func AddDigest(event *Event) {
+func (event *Event) AddDigest() {
 	data, _ := json.Marshal(event)
 	h := sha256.New()
 	h.Write(data)
 	event.digest = h.Sum(nil)
 }
 
-func GetDigest(event *Event) []byte {
+func (event *Event) GetDigest() []byte {
 	return event.digest
 }
 
@@ -146,8 +143,8 @@ func decodeEvent(b *bytes.Buffer) *Event {
 func afterCommit(evt *Event) {
 	// REVIEW: consider storing event in DB
 	/*
-	data := encodeEvent(evt)
-	fmt.Printf("storagePersist => %v\n", decodeEvent(data))
+		data := encodeEvent(evt)
+		fmt.Printf("storagePersist => %v\n", decodeEvent(data))
 	*/
 }
 
@@ -217,7 +214,7 @@ func applyTransform(machine Machine, event *Event, persistEvent bool, preconditi
 		return err
 	}
 
-	AddDigest(event)
+	event.AddDigest()
 	err = precondition(event)
 	if err != nil {
 		txn.Abort()

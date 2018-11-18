@@ -3,14 +3,14 @@ package contract
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"github.com/FactomProject/ptnet-eventstore/identity"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
+	"github.com/FactomProject/ptnet-eventstore/x"
 	"github.com/hashicorp/go-memdb"
 )
 
 // KLUDGE mock values used for testing
 var CHAIN_ID string = "|ChainID|"
-var CONTRACT_ID string = "|ContractID|"
 
 type Contract struct {
 	Schema  string        `json:"schema"`
@@ -19,7 +19,7 @@ type Contract struct {
 }
 
 type AddressAmountMap struct {
-	Address string `json:"address""`
+	Address []byte `json:"address""`
 	Amount  uint64 `json:"amount""`
 }
 
@@ -38,6 +38,7 @@ type Declaration struct {
 	Conditions  []Condition                 `json:"conditions"` // enforce redeem conditions
 }
 
+// FIXME: Goland advises not to start Type w/ package name
 type ContractState struct {
 	ChainID   string      `json:"chainid"`
 	LastEntry string      `json:"last_entry"`
@@ -52,7 +53,7 @@ type Command struct {
 	Action     string
 	Amount     uint64
 	Payload    []byte
-	Pubkey     string //        compare w/ factom identity standard
+	Pubkey     identity.PublicKey //        compare w/ factom identity standard
 }
 
 var Contracts map[string]Contract = map[string]Contract{
@@ -73,15 +74,17 @@ func Txn(schema string, write bool) *memdb.Txn {
 	return Contracts[schema].db.Txn(write)
 }
 
-func SignEvent(event *ptnet.Event, pubKey string, privKey string) error {
-	sig := fmt.Sprintf("signed with: %v", privKey)
-	ptnet.AddSignature(event, pubKey, sig)
+func SignEvent(event *ptnet.Event, privKey identity.PrivateKey) error {
+	sig := x.NewSignature(privKey[:], event.GetDigest())
+	pubKey := identity.PublicKey{}
+	copy(pubKey[:], x.PrivateKeyToPub(privKey[:]))
+	ptnet.AddSignature(event, pubKey, sig.Bytes())
 	return nil
 }
 
-func CreateAndSign(contract Declaration, chainID string, privkey string) (*ptnet.Event, error) {
+func CreateAndSign(contract Declaration, chainID string, privkey identity.PrivateKey) (*ptnet.Event, error) {
 	return Create(contract, chainID, func(evt *ptnet.Event) error {
-		return SignEvent(evt, contract.Inputs[0].Address, privkey)
+		return SignEvent(evt, privkey)
 	})
 }
 
@@ -91,6 +94,8 @@ func Create(contract Declaration, chainID string, signfunc func(*ptnet.Event) er
 	//println("contract:")
 	//println(string(payload))
 
+	pubkey := identity.PublicKey{}
+
 	event, err := Transform(
 		Command{
 			ChainID:    chainID, // test values
@@ -99,7 +104,7 @@ func Create(contract Declaration, chainID string, signfunc func(*ptnet.Event) er
 			Action:     ptnet.BEGIN,     // state machine action
 			Amount:     1,               // triggers input action 'n' times
 			Payload:    []byte(payload), // arbitrary data optionally included
-			Pubkey:     contract.Inputs[0].Address, // REVIEW: will there always be a single input?
+			Pubkey:     pubkey, // REVIEW: will there always be a single input?
 		}, signfunc)
 
 	if err != nil {
@@ -129,6 +134,7 @@ func state(schema string, contractID string) (ptnet.State, error) {
 // validate event against guard conditions
 func evalGuards(event *ptnet.Event) error {
 	if event.Action == ptnet.BEGIN {
+		// REVIEW: should identity making offer be validated?
 		return nil
 	}
 
@@ -144,18 +150,22 @@ func evalGuards(event *ptnet.Event) error {
 	currentState, _ := state(event.Schema, event.Oid)
 
 	for i, g := range c.Guards {
-		if ptnet.ValidSignature(event, c.Outputs[i].Address) {
-			_, err := ptnet.VectorAdd(currentState.Vector, g, 1)
-			return err
+		_, err := ptnet.VectorAdd(currentState.Vector, ptnet.Transition(g), 1)
+
+		if err != nil {
+			continue
+		}
+		if event.SignatureValid(c.Outputs[i].Address) {
+			return nil
 		}
 	}
 	return errors.New("failed guard condition")
 }
 
 // sign and commit event
-func Commit(cmd Command, privKey string) (*ptnet.Event, error) {
+func Commit(cmd Command, privKey identity.PrivateKey) (*ptnet.Event, error) {
 	return Transform(cmd, func(evt *ptnet.Event) error {
-		SignEvent(evt, cmd.Pubkey, privKey)
+		SignEvent(evt, privKey)
 		return nil
 	})
 }
@@ -210,10 +220,11 @@ func IsHalted(contract Declaration) bool {
 	return true
 }
 
-func CanRedeem(contract Declaration, publicKey string) bool {
+func CanRedeem(contract Declaration, publicKey identity.PublicKey) bool {
 	state, _ := getContractState(contract.Schema, contract.ContractID)
 	for i, condition := range contract.Conditions {
-		if contract.Outputs[i].Address != publicKey {
+		// FIXME compare keys correctly
+		if ! publicKey.MatchesAddress(contract.Outputs[i].Address) {
 			continue
 		}
 		if canExecute(state, ptnet.Transition(condition), 1) {
