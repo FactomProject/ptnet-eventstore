@@ -17,21 +17,8 @@ type Transaction struct{
 	*ptnet.Event
 }
 
-func Depositor(o Offer) identity.PrivateKey {
-	// FIXME actually return the proper key
-	return identity.PrivateKey{}
-}
-
-func Executor(x Execution) identity.PrivateKey {
-	// FIXME actually return the proper key
-	return identity.PrivateKey{}
-}
-
-func OfferTransaction(o Offer, privkey identity.PrivateKey) Transaction {
-	event, err := contract.Create(o.Declaration, o.ChainID, func(evt *ptnet.Event) error {
-		contract.SignEvent(evt, Depositor(o))
-		return nil
-	})
+func OfferTransaction(o Offer, privKey identity.PrivateKey) Transaction {
+	event, err := contract.Create(o.Declaration, o.ChainID, privKey)
 
 	if err != nil {
 		panic("failed to create contract")
@@ -40,9 +27,9 @@ func OfferTransaction(o Offer, privkey identity.PrivateKey) Transaction {
 	return Transaction{Event: event}
 }
 
-func ExecuteTransaction(x Execution, privkey identity.PrivateKey) (Transaction, error) {
+func ExecuteTransaction(x Execution, privKey identity.PrivateKey) (Transaction, error) {
 	event, err := contract.Transform(x.Command, func(evt *ptnet.Event) error {
-		contract.SignEvent(evt, Executor(x))
+		contract.SignEvent(evt, privKey)
 		return nil
 	})
 

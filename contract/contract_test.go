@@ -40,10 +40,10 @@ func TestTransactionSequence(t *testing.T) {
 	c := contract.TicTacToeContract()
 
 	t.Run("publish offer", func(t *testing.T) {
-		event, err := contract.CreateAndSign(c, contract.CHAIN_ID, Private[DEPOSITOR])
+		event, err := contract.Create(c, contract.CHAIN_ID, Private[DEPOSITOR])
 		assert.Nil(t, err)
-		assert.Equal(t, true, contract.Exists(ptnet.OctoeV1, "|OctoeContractID|"), "Failed to retrieve contract declaration")
-		assert.Equal(t, event.Oid, "|OctoeContractID|")
+		assert.Equal(t, true, contract.Exists(ptnet.OctoeV1, c.ContractID), "Failed to retrieve contract declaration")
+		assert.Equal(t, event.Oid, c.ContractID)
 		assert.Equal(t, event.Action, ptnet.BEGIN, "")
 		assert.Equal(t, event.InputState, ptnet.StateVector{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1})
 		assert.Equal(t, event.OutputState, ptnet.StateVector{1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0})

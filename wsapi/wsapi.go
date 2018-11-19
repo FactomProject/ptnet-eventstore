@@ -1,21 +1,13 @@
-package main
+package wsapi
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/FactomProject/ptnet-eventstore/contract"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
 	"github.com/FactomProject/web"
 	"io/ioutil"
-	"net/http"
-	"os"
 	"strconv"
-	"time"
 )
-
-const httpApi = "http://127.0.0.1:8080"
-const listenInterface = "0.0.0.0:8080"
 
 type EventList struct {
 	Count uint64         `json:"count"`
@@ -97,61 +89,8 @@ func contractState(ctx *web.Context, schema string) {
 	// ctx.ResponseWriter.Write(data)
 }
 
-// post a new event
-func doPost() {
-	actions := []string{"INC_0", "DEC_0"}
-	//action := Actions[random.RandInt()%len(Actions)]
-	action := actions[0]
-	amount := "2"
-
-	url := httpApi + "/dispatch/counter/foo/" + action + "/" + amount
-
-	var jsonStr = []byte(`{"Hello":"World"}`)
-	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, _ := client.Do(req)
-	defer resp.Body.Close()
-
-	//fmt.Println("response Status:", resp.Status)
-	//fmt.Println("response Headers:", resp.Header)
-	body, _ := ioutil.ReadAll(resp.Body)
-	_ = body
-	fmt.Println("post response Body:", string(body))
-}
-
-// get test stream
-func doGet(uri string) {
-	url := httpApi + uri
-	response, err := http.Get(url)
-	if err != nil {
-		fmt.Printf("%s", err)
-		os.Exit(1)
-	} else {
-		//fmt.Println("response Status:", resp.Status)
-		//fmt.Println("response Headers:", resp.Header)
-		body, _ := ioutil.ReadAll(response.Body)
-		_ = body
-		fmt.Println("get response Body:", string(body))
-	}
-}
-
-// test using periodic web requests
-func tickerTest() {
-	ticker := time.NewTicker(time.Second)
-	for range ticker.C {
-		//doGet("/stream/counter/foo")
-		//doGet("/state/counter/foo")
-		//doGet("/count/counter/foo")
-		//doGet("/machine/counter")
-		doGet("/contract/machine/counter")
-		doPost()
-	}
-}
-
 // configure web api
-func addRoutes() {
+func AddRoutes() {
 	web.Post("/dispatch/(.+)/(.+)/(.+)/(.+)", dispatch)
 	web.Get("/state/(.+)/(.+)", state)
 	web.Get("/machine/(.+)", machine)
@@ -159,15 +98,4 @@ func addRoutes() {
 	web.Get("/count/(.+)/(.+)", count)
 	web.Get("/contract/machine/(.+)", contractMachine)
 	//web.Get("/contract/state/(.+)/(.+)", contractState)
-}
-
-func Run() {
-	addRoutes()
-	web.Run(listenInterface)
-}
-
-// start polling test server
-func main() {
-	go tickerTest()
-	Run()
 }

@@ -38,8 +38,7 @@ type Declaration struct {
 	Conditions  []Condition                 `json:"conditions"` // enforce redeem conditions
 }
 
-// FIXME: Goland advises not to start Type w/ package name
-type ContractState struct {
+type State struct {
 	ChainID   string      `json:"chainid"`
 	LastEntry string      `json:"last_entry"`
 	ChainHead string      `json:"chainhead"`
@@ -82,13 +81,13 @@ func SignEvent(event *ptnet.Event, privKey identity.PrivateKey) error {
 	return nil
 }
 
-func CreateAndSign(contract Declaration, chainID string, privkey identity.PrivateKey) (*ptnet.Event, error) {
-	return Create(contract, chainID, func(evt *ptnet.Event) error {
+func Create(contract Declaration, chainID string, privkey identity.PrivateKey) (*ptnet.Event, error) {
+	return create(contract, chainID, func(evt *ptnet.Event) error {
 		return SignEvent(evt, privkey)
 	})
 }
 
-func Create(contract Declaration, chainID string, signfunc func(*ptnet.Event) error) (*ptnet.Event, error) {
+func create(contract Declaration, chainID string, signfunc func(*ptnet.Event) error) (*ptnet.Event, error) {
 
 	payload, _ := json.MarshalIndent(contract, "", "    ")
 	//println("contract:")
@@ -104,7 +103,7 @@ func Create(contract Declaration, chainID string, signfunc func(*ptnet.Event) er
 			Action:     ptnet.BEGIN,     // state machine action
 			Amount:     1,               // triggers input action 'n' times
 			Payload:    []byte(payload), // arbitrary data optionally included
-			Pubkey:     pubkey, // REVIEW: will there always be a single input?
+			Pubkey:     pubkey,          // REVIEW: will there always be a single input?
 		}, signfunc)
 
 	if err != nil {
@@ -191,7 +190,7 @@ func Exists(schema string, contractID string) bool {
 	return raw != nil
 }
 
-func getContractState(schema string, contractID string) (ptnet.State, error) {
+func getState(schema string, contractID string) (ptnet.State, error) {
 	txn := ptnet.Txn(schema, false)
 	raw, _ := txn.First(ptnet.StateTable, "id", contractID)
 	if raw == nil {
@@ -209,10 +208,11 @@ func canExecute(state ptnet.State, transition ptnet.Transition, multiplier uint6
 }
 
 func IsHalted(contract Declaration) bool {
-	state, _ := getContractState(contract.Schema, contract.ContractID)
+	state, _ := getState(contract.Schema, contract.ContractID)
 	for _, transition := range contract.Actions {
 		if canExecute(state, transition, 1) {
-			// FIXME test all available guard roles
+			// REVIEW is it better to enforce state machine is halted without guards?
+			// alternatively allow guard/action combination to determine halting state
 			return false
 		}
 	}
@@ -221,10 +221,9 @@ func IsHalted(contract Declaration) bool {
 }
 
 func CanRedeem(contract Declaration, publicKey identity.PublicKey) bool {
-	state, _ := getContractState(contract.Schema, contract.ContractID)
+	state, _ := getState(contract.Schema, contract.ContractID)
 	for i, condition := range contract.Conditions {
-		// FIXME compare keys correctly
-		if ! publicKey.MatchesAddress(contract.Outputs[i].Address) {
+		if !publicKey.MatchesAddress(contract.Outputs[i].Address) {
 			continue
 		}
 		if canExecute(state, ptnet.Transition(condition), 1) {

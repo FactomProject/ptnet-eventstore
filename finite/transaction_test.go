@@ -12,6 +12,7 @@ import (
 )
 const expectValid bool = false
 const expectError bool = true
+const optionContractID string = "|OptionContractID|"
 
 // make commits and test for expected error outcome
 func commit(t *testing.T, action string, key PrivateKey, expectError bool) (finite.Transaction, error) {
@@ -20,7 +21,7 @@ func commit(t *testing.T, action string, key PrivateKey, expectError bool) (fini
 	txn, err := finite.ExecuteTransaction(finite.Execution{
 		Command: contract.Command{
 			ChainID:    contract.CHAIN_ID, // test values
-			ContractID: "|OptionContractID|",
+			ContractID: optionContractID,
 			Schema:     ptnet.OptionV1, // state machine version
 			Action:     action,         // state machine action
 			Amount:     1,              // triggers input action 'n' times
@@ -44,8 +45,8 @@ func TestTransactionSequence(t *testing.T) {
 
 	t.Run("publish offer", func(t *testing.T) {
 		txn := finite.OfferTransaction(offer, Private[DEPOSITOR])
-		assert.Equal(t, true, contract.Exists(offer.Schema, "|OptionContractID|"), "missing declaration")
-		assert.Equal(t, txn.Oid, "|OptionContractID|")
+		assert.Equal(t, true, contract.Exists(offer.Schema, optionContractID), "missing declaration")
+		assert.Equal(t, txn.Oid, optionContractID)
 		assert.Equal(t, txn.Action, ptnet.BEGIN, "")
 		assert.Equal(t, txn.InputState, ptnet.StateVector{1, 1, 1, 1, 1})
 		assert.Equal(t, txn.OutputState, ptnet.StateVector{1, 0, 0, 1, 0})
@@ -60,9 +61,8 @@ func TestTransactionSequence(t *testing.T) {
 
 	t.Run("redeem completed contract", func(t *testing.T) {
 		assert.True(t, contract.IsHalted(offer.Declaration))
-		// FIXME
-		//assert.True(t, contract.CanRedeem(offer.Declaration, Public[USER1]))
-		//assert.False(t, contract.CanRedeem(offer.Declaration, Public[DEPOSITOR]))
-		//assert.False(t, contract.CanRedeem(offer.Declaration, Public[USER2]))
+		assert.True(t, contract.CanRedeem(offer.Declaration, Public[USER1]))
+		assert.False(t, contract.CanRedeem(offer.Declaration, Public[DEPOSITOR]))
+		assert.False(t, contract.CanRedeem(offer.Declaration, Public[USER2]))
 	})
 }
