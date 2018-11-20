@@ -1,6 +1,8 @@
 package contract
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"github.com/FactomProject/ptnet-eventstore/identity"
@@ -89,7 +91,7 @@ func Create(contract Declaration, chainID string, privkey identity.PrivateKey) (
 
 func create(contract Declaration, chainID string, signfunc func(*ptnet.Event) error) (*ptnet.Event, error) {
 
-	payload, _ := json.MarshalIndent(contract, "", "    ")
+	payload, _ := json.Marshal(contract)
 	//println("contract:")
 	//println(string(payload))
 
@@ -169,9 +171,24 @@ func Commit(cmd Command, privKey identity.PrivateKey) (*ptnet.Event, error) {
 	})
 }
 
+func compress(data []byte) []byte {
+	if len(data) == 0 {
+		return data
+	}
+	var b bytes.Buffer
+	zw := gzip.NewWriter(&b)
+	_, err := zw.Write(data)
+	zw.Flush()
+	zw.Close()
+	if err != nil {
+		panic("failed to compress")
+	}
+	return b.Bytes()
+}
+
 // commit event sign with callback
 func Transform(cmd Command, signfunc func(*ptnet.Event) error) (*ptnet.Event, error) {
-	return ptnet.Transform(cmd.Schema, cmd.ContractID, cmd.Action, cmd.Amount, cmd.Payload, func(evt *ptnet.Event) error {
+	return ptnet.Transform(cmd.Schema, cmd.ContractID, cmd.Action, cmd.Amount, compress(cmd.Payload), func(evt *ptnet.Event) error {
 		if nil != signfunc(evt) {
 			panic("failed to sign event")
 		}

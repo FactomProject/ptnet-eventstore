@@ -6,7 +6,6 @@ Allow aggregation of contracts to calculate wallet balances by account.
 
 ### BACKLOG
 
-- [ ] improve string output when printing data structures for examples in this project
 - [ ] target chain - adopt FAT standard for choosing a chainid to store a given event
 - [ ] signing/externalIDs - contracts should output an event as a valid factom entry
 - [ ] update to work with factom connect or factomd to publish transactions
@@ -17,6 +16,8 @@ Allow aggregation of contracts to calculate wallet balances by account.
 
 ### COMPLETE
  
+- [x] improve string output when printing data structures for examples in this project
+- [x] add gzip to payload data
 - [x] demo smart contract protocol creation
 - [x] create a POST api for dispatching events
 - [x] in-memory state machine using go-memdb
