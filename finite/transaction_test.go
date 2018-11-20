@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
 const expectValid bool = false
 const expectError bool = true
 const optionContractID string = "|OptionContractID|"

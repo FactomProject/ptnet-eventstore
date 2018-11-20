@@ -1,6 +1,7 @@
 package ptnet
 
 import (
+	"text/template"
 	"bytes"
 	"crypto/sha256"
 	"encoding/gob"
@@ -46,7 +47,6 @@ type Event struct {
 	pubkeys     []identity.PublicKey // TODO
 	signatures [][]byte // signatures
 	digest     []byte
-	entryhash  string
 }
 
 // start a new transaction with in-memory db
@@ -118,6 +118,14 @@ func (event *Event) AddDigest() {
 
 func (event *Event) GetDigest() []byte {
 	return event.digest
+}
+
+func (event *Event) GetPubkeys() []identity.PublicKey {
+	return event.pubkeys
+}
+
+func (event *Event) GetSignatures() [][]byte {
+	return event.signatures
 }
 
 func encodeEvent(event *Event) *bytes.Buffer {
@@ -238,4 +246,32 @@ func applyTransform(machine Machine, event *Event, persistEvent bool, preconditi
 
 	txn.Commit()
 	return err
+}
+
+
+var eventFormat string = `
+Timestamp:   {{ .Timestamp }}
+Schema:      {{ .Schema }}
+Action:      {{ .Action }}
+Oid:         {{ .Oid }}
+Value:       {{ .Value }}
+InputState:  {{ .InputState }}
+OutputState: {{ .OutputState }}
+Payload:
+	{{ printf "%x" .Payload }}
+digest:
+	{{ printf "%x" .GetDigest }}
+pubkeys: {{ range $_, $pubkey := .GetPubkeys }}
+	{{ printf "%x" $pubkey }}{{ end }}
+signatures: {{ range $_, $sig := .GetSignatures }}
+	{{ printf "%x" $sig }}{{ end }}
+`
+var eventTemplate *template.Template = template.Must(
+	template.New("").Parse(eventFormat),
+)
+
+func (e *Event) String() string {
+	b := &bytes.Buffer{}
+	eventTemplate.Execute(b, e)
+	return b.String()
 }
