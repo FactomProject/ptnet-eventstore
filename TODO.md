@@ -6,8 +6,8 @@ Allow aggregation of contracts to calculate wallet balances by account.
 
 ### BACKLOG
 
+- [ ] generate state machine code from pnml with jennifer
 - [ ] target chain - adopt FAT standard for choosing a chainid to store a given event
-- [ ] signing/externalIDs - contracts should output an event as a valid factom entry
 - [ ] update to work with factom connect or factomd to publish transactions
 - [ ] 'cache miss' should result when a state record is not found in memory when working w/ actual blockchain storage
 - [ ] demo smart contract protocol playback/validation
@@ -34,6 +34,7 @@ Allow aggregation of contracts to calculate wallet balances by account.
 
 ### ICEBOX
 
+- [ ] signing/externalIDs - contracts should output an event as a valid factom entry
 - [ ] demo composing multiple state machines in a single contract
 - [ ] demo up-converting a contract from v1 -> v2 by extending the length of the statevector
 - [ ] use testify/mocks rather than hardcoded literals in contract/definitions.go  finite/definitions.go

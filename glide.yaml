@@ -15,3 +15,7 @@ import:
   version: ^1.2.2
   subpackages:
   - assert
+- package: github.com/stackdump/gopetri
+  subpackages:
+  - pnml
+  - statemachine
