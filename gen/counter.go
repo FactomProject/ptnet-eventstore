@@ -13,7 +13,7 @@ var CounterV1 PetriNet = PetriNet{
 		},
 		"p1": Place{
 				Initial: 0,
-				Offset: 0,
+				Offset: 1,
 				Capacity: 0,
 		},
 	},

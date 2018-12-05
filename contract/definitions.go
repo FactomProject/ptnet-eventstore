@@ -1,6 +1,9 @@
 package contract
 
-import "github.com/FactomProject/ptnet-eventstore/ptnet"
+import (
+	"github.com/FactomProject/ptnet-eventstore/gen"
+	"github.com/FactomProject/ptnet-eventstore/ptnet"
+)
 import . "github.com/FactomProject/ptnet-eventstore/identity"
 
 /*
@@ -13,7 +16,7 @@ import . "github.com/FactomProject/ptnet-eventstore/identity"
 // will only redeem once
 // tokens should be thought of as "pay-to-script" - locked until state machine is halted
 func OptionContract() Declaration {
-	m := ptnet.StateMachines["option-v1"]
+	p := gen.OptionV1
 
 	return Declaration{ // array of inputs also referenced by guards and conditions
 		Inputs: []AddressAmountMap{ // array of input depositors
@@ -27,24 +30,25 @@ func OptionContract() Declaration {
 		BlockHeight: 60221409,       // deadline for halting state
 		Salt:        "|RANDOM|",     // added random salt
 		ContractID:  "|OptionContractID|",   // unique ID for this contract instance
-		Schema:      ptnet.OptionV1, // versioned contract schema
-		State:       m.Initial,      // state machine initial state
-		Actions:     m.Transitions,  // state machine defined transitions
+		Schema:      ptnet.OptionV1,         // versioned contract schema
+		Capacity:    p.GetCapacityVector(), // state machine initial state
+		State:       p.GetInitialState(),   // state machine initial state
+		Actions:     p.Transitions,  // state machine defined transitions
 		Guards: []Condition{ // guard clause restricts actions
-			Condition{0, 0, 0, -1, 0}, // block unless contract is still open
-			Condition{0, 0, 0, -1, 0}, // NOTE: don't really need this but it illustrates ability
-			Condition{0, 0, 0, -1, 0}, // to restrict actions without the state machine being halted
+			Role(p,[]string{"OPEN"}, 1),
+			Role(p,[]string{"OPEN"},1),
+			Role(p,[]string{"OPEN"},1),
 		},
 		Conditions: []Condition{ // contract conditions specify additional redeem conditions
-			Condition{0, 0, 0, 0, -1}, // refund pay addr[0]
-			Condition{0, -1, 0, 0, 0}, // pay addr[1]
-			Condition{0, 0, -1, 0, 0}, // pay addr[2]
+			Check(p,[]string{"REFUND"},1),
+			Check(p,[]string{"OUT1"},1),
+			Check(p,[]string{"OUT2"},1),
 		},
 	}
 }
 
 func TicTacToeContract() Declaration {
-	m := ptnet.StateMachines["octoe-v1"]
+	p := gen.OctoeV1
 
 	return Declaration{ // array of inputs/outputs also referenced by guards and conditions
 		Inputs: []AddressAmountMap{ // array of input depositors
@@ -58,20 +62,19 @@ func TicTacToeContract() Declaration {
 		BlockHeight: 60221409,      // deadline for halting state
 		Salt:        "|RANDOM|",    // added random salt
 		ContractID:  "|OctoeContractID|",   // unique ID for this contract instance
-		Schema:      "octoe-v1",    // versioned contract schema
-		State:       m.Initial,     // state machine initial state
-		Actions:     m.Transitions, // state machine defined transitions
+		Schema:      "OctoeV1",    // versioned contract schema
+		Capacity:    p.GetCapacityVector(), // capacity for each place
+		State:       p.GetInitialState(), // initial state
+		Actions:     p.Transitions, // state machine defined transitions
 		Guards: []Condition{ // guard clause restricts actions
-			//       00 01 02 10 11 12 20 21 22  O  X $O $X $DEP // variable labels
-			Condition{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},  // Admin - 'contract owner' can take action at any time
-			Condition{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0}, // PlayerX - players must move only when it's their turn
-			Condition{0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0}, // PlayerO
+			Role(p, []string{}, 1), // depositor is unrestricted
+			Role(p, []string{"turn_x"}, 1), // players must
+			Role(p, []string{"turn_o"}, 1), // take turns
 		},
 		Conditions: []Condition{ // contract conditions specify additional redeem conditions
-			//       00 01 02 10 11 12 20 21 22  O  X $O $X $DEP  // variable labels
-			Condition{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1}, // game ended without winner tokens are unlocked for original depositor
-			Condition{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0}, // game ended PlayerX wins
-			Condition{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0}, // game ended PlayerO wins
+			Check(p, []string{"REFUND"}, 1), // no winner take 1 token prize back
+			Check(p, []string{"OUT_X"}, 1), // pay player X 1 token
+			Check(p, []string{"OUT_O"}, 1),  // pay player O 1 token
 		},
 	}
 }

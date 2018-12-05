@@ -5,10 +5,14 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/FactomProject/ptnet-eventstore/gen"
 	"github.com/FactomProject/ptnet-eventstore/identity"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
 	"github.com/FactomProject/ptnet-eventstore/x"
 	"github.com/hashicorp/go-memdb"
+	. "github.com/stackdump/gopetri/statemachine"
+	"text/template"
 )
 
 // KLUDGE mock values used for testing
@@ -16,7 +20,7 @@ var CHAIN_ID string = "|ChainID|"
 
 type Contract struct {
 	Schema  string        `json:"schema"`
-	Machine ptnet.Machine `json:"state_machine""`
+	Machine StateMachine `json:"state_machine""`
 	db      *memdb.MemDB
 }
 
@@ -25,7 +29,7 @@ type AddressAmountMap struct {
 	Amount  uint64 `json:"amount""`
 }
 
-type Condition ptnet.Transition
+type Condition Transition
 
 type Declaration struct {
 	Inputs      []AddressAmountMap          `json:"inputs"`
@@ -34,8 +38,9 @@ type Declaration struct {
 	Salt        string                      `json:"salt"`
 	ContractID  string                      `json:"contractid"`
 	Schema      string                      `json:"schema"`
-	State       ptnet.StateVector           `json:"state"`
-	Actions     map[string]ptnet.Transition `json:"actions"`
+	Capacity    StateVector					`json:"capacity"`
+	State       StateVector					`json:"state"`
+	Actions     map[Action]Transition 		`json:"actions"`
 	Guards      []Condition                 `json:"guards"`     // enforces contract roles
 	Conditions  []Condition                 `json:"conditions"` // enforce redeem conditions
 }
@@ -44,7 +49,7 @@ type State struct {
 	ChainID   string      `json:"chainid"`
 	LastEntry string      `json:"last_entry"`
 	ChainHead string      `json:"chainhead"`
-	State     ptnet.State `json:"state"`
+	State     StateVector `json:"state"`
 }
 
 type Command struct {
@@ -52,7 +57,7 @@ type Command struct {
 	ContractID string
 	Schema     string
 	Action     string
-	Amount     uint64
+	Mult       uint64
 	Payload    []byte
 	Pubkey     identity.PublicKey //        compare w/ factom identity standard
 }
@@ -60,12 +65,12 @@ type Command struct {
 var Contracts map[string]Contract = map[string]Contract{
 	ptnet.OptionV1: Contract{
 		Schema:  ptnet.OptionV1,
-		Machine: ptnet.StateMachines[ptnet.OptionV1],
+		Machine: gen.OptionV1.StateMachine(),
 		db:      ContractStore(),
 	},
 	ptnet.OctoeV1: Contract{
 		Schema:  ptnet.OctoeV1,
-		Machine: ptnet.StateMachines[ptnet.OctoeV1],
+		Machine: gen.OctoeV1.StateMachine(),
 		db:      ContractStore(),
 	},
 }
@@ -103,7 +108,7 @@ func create(contract Declaration, chainID string, signfunc func(*ptnet.Event) er
 			ContractID: contract.ContractID,
 			Schema:     contract.Schema,
 			Action:     ptnet.BEGIN,     // state machine action
-			Amount:     1,               // triggers input action 'n' times
+			Mult:	    1,               // triggers input action 'n' times
 			Payload:    []byte(payload), // arbitrary data optionally included
 			Pubkey:     pubkey,          // REVIEW: will there always be a single input?
 		}, signfunc)
@@ -151,7 +156,7 @@ func evalGuards(event *ptnet.Event) error {
 	currentState, _ := state(event.Schema, event.Oid)
 
 	for i, g := range c.Guards {
-		_, err := ptnet.VectorAdd(currentState.Vector, ptnet.Transition(g), 1)
+		_, err := ptnet.VectorAdd(currentState.Vector, Transition(g), 1)
 
 		if err != nil {
 			continue
@@ -188,7 +193,7 @@ func compress(data []byte) []byte {
 
 // commit event sign with callback
 func Transform(cmd Command, signfunc func(*ptnet.Event) error) (*ptnet.Event, error) {
-	return ptnet.Transform(cmd.Schema, cmd.ContractID, cmd.Action, cmd.Amount, compress(cmd.Payload), func(evt *ptnet.Event) error {
+	return ptnet.Transform(cmd.Schema, cmd.ContractID, cmd.Action, cmd.Mult, compress(cmd.Payload), func(evt *ptnet.Event) error {
 		if nil != signfunc(evt) {
 			panic("failed to sign event")
 		}
@@ -216,7 +221,7 @@ func getState(schema string, contractID string) (ptnet.State, error) {
 	return raw.(ptnet.State), nil
 }
 
-func canExecute(state ptnet.State, transition ptnet.Transition, multiplier uint64) bool {
+func canExecute(state ptnet.State, transition Transition, multiplier uint64) bool {
 	_, err := ptnet.VectorAdd(state.Vector, transition, multiplier)
 	if err == nil {
 		return true
@@ -243,10 +248,65 @@ func CanRedeem(contract Declaration, publicKey identity.PublicKey) bool {
 		if !publicKey.MatchesAddress(contract.Outputs[i].Address) {
 			continue
 		}
-		if canExecute(state, ptnet.Transition(condition), 1) {
+		if canExecute(state, Transition(condition), 1) {
 			return true
 		}
 	}
 
 	return false
 }
+var contractFormat string = `
+Inputs: {{ range $_, $input := .Inputs}}
+	Address: {{ printf "%x" $input.Address }} Amount: {{ $input.Amount }} {{ end }}
+Outputs: {{ range $_, $output := .Outputs}}
+	Address: {{ printf "%x" $output.Address }} Amount: {{ $output.Amount }} {{ end }}
+BlockHeight: {{ .BlockHeight }}
+Salt: {{ .Salt }}
+ContractID: {{ .ContractID }}
+Schema: {{ .Schema }}
+State: {{ .GetState }}
+Actions: {{ range $key, $action := .Actions }}
+	{{$key}}: {{ $action }}{{ end }}
+Guards: {{ range $i, $guard := .Guards }}
+	{{$i}}: {{ $guard }}{{ end }}
+Conditions: {{ range $i, $condition := .Conditions }}
+	{{$i}}: {{ $condition }}{{ end }}
+`
+var contractTemplate *template.Template = template.Must(
+	template.New("").Parse(contractFormat),
+)
+
+type contractSource struct {
+	Declaration
+}
+
+func(c contractSource) GetState() (s []uint64) {
+	return ptnet.ToVector(s)
+}
+
+func (contract Declaration) String() string {
+	b := &bytes.Buffer{}
+	contractTemplate.Execute(b, contractSource{contract})
+	return b.String()
+}
+
+
+// Dual is a vector that won't be used as a transformation
+// instead these vectors provide a way to simulate additional actions
+// to test the current state vector by way of subtraction
+func Dual(p PetriNet, placeNames []string, mult int64) []int64 {
+	role := p.GetEmptyVector()
+	for  _, k := range placeNames {
+		attr, ok := p.Places[k]
+		if ok {
+			role[attr.Offset] = mult*-1 // test by subtraction
+		} else {
+			panic(fmt.Sprintf("unknown place: %v", k))
+		}
+	}
+	return role
+}
+
+// alias for syntactic sugar
+var Role = Dual
+var Check = Role

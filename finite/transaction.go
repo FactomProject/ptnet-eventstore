@@ -50,7 +50,7 @@ BlockHeight: {{ .BlockHeight }}
 Salt: {{ .Salt }}
 ContractID: {{ .ContractID }}
 Schema: {{ .Schema }}
-State: {{ .State }}
+State: {{ .GetState }}
 Actions: {{ range $key, $action := .Actions }}
 	{{$key}}: {{ $action }}{{ end }}
 Guards: {{ range $i, $guard := .Guards }}
@@ -64,8 +64,16 @@ var offerTemplate *template.Template = template.Must(
 
 func (offer Offer) String() string {
 	b := &bytes.Buffer{}
-	offerTemplate.Execute(b, offer)
+	offerTemplate.Execute(b, offerSource{offer})
 	return b.String()
+}
+
+func (s offerSource) GetState() []uint64{
+	return ptnet.ToVector(s.State)
+}
+
+type offerSource struct {
+	Offer
 }
 
 var transactionFormat string = `

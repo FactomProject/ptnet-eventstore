@@ -9,6 +9,6 @@ import (
 func TestKeyValidation(t *testing.T) {
 	pub := Public[DEPOSITOR]
 	addr := Address[DEPOSITOR]
-	//fmt.Printf("addr: %x pub: %x", addr, pub)
 	assert.True(t, pub.MatchesAddress(addr))
+	assert.False(t, pub.MatchesAddress(Address[USER1]))
 }

@@ -6,7 +6,8 @@ Allow aggregation of contracts to calculate wallet balances by account.
 
 ### BACKLOG
 
-- [ ] generate state machine code from pnml with jennifer
+- [ ] refactor to use gopetri instead of ptnet everwhere - missing capacity check without this
+- [ ] run w/ fnode sims ? & tap into journaled messages ?
 - [ ] target chain - adopt FAT standard for choosing a chainid to store a given event
 - [ ] update to work with factom connect or factomd to publish transactions
 - [ ] 'cache miss' should result when a state record is not found in memory when working w/ actual blockchain storage
@@ -16,6 +17,7 @@ Allow aggregation of contracts to calculate wallet balances by account.
 
 ### COMPLETE
  
+- [x] generate state machine code from pnml
 - [x] improve string output when printing data structures for examples in this project
 - [x] add gzip to payload data
 - [x] demo smart contract protocol creation

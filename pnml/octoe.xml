@@ -2,24 +2,64 @@
 <pnml>
   <net>
     <token blue="0" green="0" id="Default" red="0"/>
-    <place id="complete">
+    <place id="OUT_O">
       <graphics>
-        <position x="572" y="540"/>
+        <position x="419" y="563"/>
       </graphics>
       <name>
         <graphics>
           <offset x="0.0" y="0.0"/>
         </graphics>
-        <value>complete</value>
+        <value>OUT_O</value>
       </name>
       <capacity>
-        <value>1</value>
+        <value>0</value>
       </capacity>
       <initialMarking>
         <graphics>
           <offset x="0.0" y="0.0"/>
         </graphics>
-        <value>Default,1</value>
+        <value>Default,0</value>
+      </initialMarking>
+    </place>
+    <place id="OUT_X">
+      <graphics>
+        <position x="637" y="569"/>
+      </graphics>
+      <name>
+        <graphics>
+          <offset x="0.0" y="0.0"/>
+        </graphics>
+        <value>OUT_X</value>
+      </name>
+      <capacity>
+        <value>0</value>
+      </capacity>
+      <initialMarking>
+        <graphics>
+          <offset x="0.0" y="0.0"/>
+        </graphics>
+        <value>Default,0</value>
+      </initialMarking>
+    </place>
+    <place id="REFUND">
+      <graphics>
+        <position x="530" y="562"/>
+      </graphics>
+      <name>
+        <graphics>
+          <offset x="0.0" y="0.0"/>
+        </graphics>
+        <value>REFUND</value>
+      </name>
+      <capacity>
+        <value>0</value>
+      </capacity>
+      <initialMarking>
+        <graphics>
+          <offset x="0.0" y="0.0"/>
+        </graphics>
+        <value>Default,0</value>
       </initialMarking>
     </place>
     <place id="m00">
@@ -33,7 +73,7 @@
         <value>m00</value>
       </name>
       <capacity>
-        <value>1</value>
+        <value>0</value>
       </capacity>
       <initialMarking>
         <graphics>
@@ -53,7 +93,7 @@
         <value>m01</value>
       </name>
       <capacity>
-        <value>1</value>
+        <value>0</value>
       </capacity>
       <initialMarking>
         <graphics>
@@ -73,7 +113,7 @@
         <value>m02</value>
       </name>
       <capacity>
-        <value>1</value>
+        <value>0</value>
       </capacity>
       <initialMarking>
         <graphics>
@@ -93,7 +133,7 @@
         <value>m10</value>
       </name>
       <capacity>
-        <value>1</value>
+        <value>0</value>
       </capacity>
       <initialMarking>
         <graphics>
@@ -113,7 +153,7 @@
         <value>m11</value>
       </name>
       <capacity>
-        <value>1</value>
+        <value>0</value>
       </capacity>
       <initialMarking>
         <graphics>
@@ -133,7 +173,7 @@
         <value>m12</value>
       </name>
       <capacity>
-        <value>1</value>
+        <value>0</value>
       </capacity>
       <initialMarking>
         <graphics>
@@ -153,7 +193,7 @@
         <value>m20</value>
       </name>
       <capacity>
-        <value>1</value>
+        <value>0</value>
       </capacity>
       <initialMarking>
         <graphics>
@@ -173,7 +213,7 @@
         <value>m21</value>
       </name>
       <capacity>
-        <value>1</value>
+        <value>0</value>
       </capacity>
       <initialMarking>
         <graphics>
@@ -193,7 +233,7 @@
         <value>m22</value>
       </name>
       <capacity>
-        <value>1</value>
+        <value>0</value>
       </capacity>
       <initialMarking>
         <graphics>
@@ -213,7 +253,7 @@
         <value>new</value>
       </name>
       <capacity>
-        <value>1</value>
+        <value>0</value>
       </capacity>
       <initialMarking>
         <graphics>
@@ -233,7 +273,7 @@
         <value>turn_o</value>
       </name>
       <capacity>
-        <value>1</value>
+        <value>0</value>
       </capacity>
       <initialMarking>
         <graphics>
@@ -253,7 +293,7 @@
         <value>turn_x</value>
       </name>
       <capacity>
-        <value>1</value>
+        <value>0</value>
       </capacity>
       <initialMarking>
         <graphics>
@@ -262,15 +302,15 @@
         <value>Default,0</value>
       </initialMarking>
     </place>
-    <transition id="END_X">
+    <transition id="WIN_O">
       <graphics>
-        <position x="270" y="516"/>
+        <position x="337" y="506"/>
       </graphics>
       <name>
         <graphics>
           <offset x="0.0" y="0.0"/>
         </graphics>
-        <value>END_X</value>
+        <value>WIN_O</value>
       </name>
       <infiniteServer>
         <value>false</value>
@@ -288,15 +328,15 @@
         <value>1.0</value>
       </rate>
     </transition>
-    <transition id="EXEC">
+    <transition id="END_X">
       <graphics>
-        <position x="116" y="152"/>
+        <position x="270" y="516"/>
       </graphics>
       <name>
         <graphics>
           <offset x="0.0" y="0.0"/>
         </graphics>
-        <value>EXEC</value>
+        <value>END_X</value>
       </name>
       <infiniteServer>
         <value>false</value>
@@ -479,6 +519,32 @@
           <offset x="0.0" y="0.0"/>
         </graphics>
         <value>O02</value>
+      </name>
+      <infiniteServer>
+        <value>false</value>
+      </infiniteServer>
+      <timed>
+        <value>false</value>
+      </timed>
+      <priority>
+        <value>1</value>
+      </priority>
+      <orientation>
+        <value>0</value>
+      </orientation>
+      <rate>
+        <value>1.0</value>
+      </rate>
+    </transition>
+    <transition id="EXEC">
+      <graphics>
+        <position x="116" y="152"/>
+      </graphics>
+      <name>
+        <graphics>
+          <offset x="0.0" y="0.0"/>
+        </graphics>
+        <value>EXEC</value>
       </name>
       <infiniteServer>
         <value>false</value>
@@ -756,6 +822,32 @@
         <value>1.0</value>
       </rate>
     </transition>
+    <transition id="WIN_X">
+      <graphics>
+        <position x="718" y="498"/>
+      </graphics>
+      <name>
+        <graphics>
+          <offset x="0.0" y="0.0"/>
+        </graphics>
+        <value>WIN_X</value>
+      </name>
+      <infiniteServer>
+        <value>false</value>
+      </infiniteServer>
+      <timed>
+        <value>false</value>
+      </timed>
+      <priority>
+        <value>1</value>
+      </priority>
+      <orientation>
+        <value>0</value>
+      </orientation>
+      <rate>
+        <value>1.0</value>
+      </rate>
+    </transition>
     <transition id="X02">
       <graphics>
         <position x="692" y="60"/>
@@ -808,9 +900,25 @@
         <value>1.0</value>
       </rate>
     </transition>
-    <arc id="END_X to complete" source="END_X" target="complete">
+    <arc id="turn_x to WIN_O" source="turn_x" target="WIN_O">
+      <arcpath curvepoint="false" id="source" x="181" y="152"/>
+      <arcpath curvepoint="false" id="target" x="337" y="506"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="WIN_O to OUT_O" source="WIN_O" target="OUT_O">
+      <arcpath curvepoint="false" id="source" x="337" y="506"/>
+      <arcpath curvepoint="false" id="target" x="419" y="563"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="END_X to REFUND" source="END_X" target="REFUND">
       <arcpath curvepoint="false" id="source" x="270" y="516"/>
-      <arcpath curvepoint="false" id="target" x="572" y="540"/>
+      <arcpath curvepoint="false" id="target" x="530" y="562"/>
       <type value="normal"/>
       <inscription>
         <value>Default,1</value>
@@ -819,6 +927,174 @@
     <arc id="turn_x to END_X" source="turn_x" target="END_X">
       <arcpath curvepoint="false" id="source" x="181" y="152"/>
       <arcpath curvepoint="false" id="target" x="270" y="516"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="m20 to O20" source="m20" target="O20">
+      <arcpath curvepoint="false" id="source" x="385" y="423"/>
+      <arcpath curvepoint="false" id="target" x="436" y="421"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="O20 to turn_x" source="O20" target="turn_x">
+      <arcpath curvepoint="false" id="source" x="436" y="421"/>
+      <arcpath curvepoint="false" id="target" x="181" y="152"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="turn_o to O20" source="turn_o" target="O20">
+      <arcpath curvepoint="false" id="source" x="937" y="327"/>
+      <arcpath curvepoint="false" id="target" x="436" y="421"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="m00 to O00" source="m00" target="O00">
+      <arcpath curvepoint="false" id="source" x="389" y="62"/>
+      <arcpath curvepoint="false" id="target" x="436" y="62"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="O00 to turn_x" source="O00" target="turn_x">
+      <arcpath curvepoint="false" id="source" x="436" y="62"/>
+      <arcpath curvepoint="false" id="target" x="181" y="152"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="turn_o to O00" source="turn_o" target="O00">
+      <arcpath curvepoint="false" id="source" x="937" y="327"/>
+      <arcpath curvepoint="false" id="target" x="436" y="62"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="m11 to O11" source="m11" target="O11">
+      <arcpath curvepoint="false" id="source" x="554" y="244"/>
+      <arcpath curvepoint="false" id="target" x="604" y="242"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="O11 to turn_x" source="O11" target="turn_x">
+      <arcpath curvepoint="false" id="source" x="604" y="242"/>
+      <arcpath curvepoint="false" id="target" x="181" y="152"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="turn_o to O11" source="turn_o" target="O11">
+      <arcpath curvepoint="false" id="source" x="937" y="327"/>
+      <arcpath curvepoint="false" id="target" x="604" y="242"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="m22 to O22" source="m22" target="O22">
+      <arcpath curvepoint="false" id="source" x="749" y="421"/>
+      <arcpath curvepoint="false" id="target" x="795" y="419"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="O22 to turn_x" source="O22" target="turn_x">
+      <arcpath curvepoint="false" id="source" x="795" y="419"/>
+      <arcpath curvepoint="false" id="target" x="181" y="152"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="turn_o to O22" source="turn_o" target="O22">
+      <arcpath curvepoint="false" id="source" x="937" y="327"/>
+      <arcpath curvepoint="false" id="target" x="795" y="419"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="m10 to O10" source="m10" target="O10">
+      <arcpath curvepoint="false" id="source" x="391" y="242"/>
+      <arcpath curvepoint="false" id="target" x="436" y="242"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="O10 to turn_x" source="O10" target="turn_x">
+      <arcpath curvepoint="false" id="source" x="436" y="242"/>
+      <arcpath curvepoint="false" id="target" x="181" y="152"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="turn_o to O10" source="turn_o" target="O10">
+      <arcpath curvepoint="false" id="source" x="937" y="327"/>
+      <arcpath curvepoint="false" id="target" x="436" y="242"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="m21 to O21" source="m21" target="O21">
+      <arcpath curvepoint="false" id="source" x="556" y="422"/>
+      <arcpath curvepoint="false" id="target" x="606" y="424"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="O21 to turn_x" source="O21" target="turn_x">
+      <arcpath curvepoint="false" id="source" x="606" y="424"/>
+      <arcpath curvepoint="false" id="target" x="181" y="152"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="turn_o to O21" source="turn_o" target="O21">
+      <arcpath curvepoint="false" id="source" x="937" y="327"/>
+      <arcpath curvepoint="false" id="target" x="606" y="424"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="m02 to O02" source="m02" target="O02">
+      <arcpath curvepoint="false" id="source" x="744" y="63"/>
+      <arcpath curvepoint="false" id="target" x="792" y="63"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="O02 to turn_x" source="O02" target="turn_x">
+      <arcpath curvepoint="false" id="source" x="792" y="63"/>
+      <arcpath curvepoint="false" id="target" x="181" y="152"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="turn_o to O02" source="turn_o" target="O02">
+      <arcpath curvepoint="false" id="source" x="937" y="327"/>
+      <arcpath curvepoint="false" id="target" x="792" y="63"/>
       <type value="normal"/>
       <inscription>
         <value>Default,1</value>
@@ -840,168 +1116,8 @@
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="m20 to O20" source="m20" target="O20">
-      <arcpath curvepoint="false" id="source" x="385" y="423"/>
-      <arcpath curvepoint="false" id="target" x="436" y="421"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="turn_o to O20" source="turn_o" target="O20">
-      <arcpath curvepoint="false" id="source" x="937" y="327"/>
-      <arcpath curvepoint="false" id="target" x="436" y="421"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="O20 to turn_x" source="O20" target="turn_x">
-      <arcpath curvepoint="false" id="source" x="436" y="421"/>
-      <arcpath curvepoint="false" id="target" x="181" y="152"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="m00 to O00" source="m00" target="O00">
-      <arcpath curvepoint="false" id="source" x="389" y="62"/>
-      <arcpath curvepoint="false" id="target" x="436" y="62"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="turn_o to O00" source="turn_o" target="O00">
-      <arcpath curvepoint="false" id="source" x="937" y="327"/>
-      <arcpath curvepoint="false" id="target" x="436" y="62"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="O00 to turn_x" source="O00" target="turn_x">
-      <arcpath curvepoint="false" id="source" x="436" y="62"/>
-      <arcpath curvepoint="false" id="target" x="181" y="152"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="m11 to O11" source="m11" target="O11">
-      <arcpath curvepoint="false" id="source" x="554" y="244"/>
-      <arcpath curvepoint="false" id="target" x="604" y="242"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="turn_o to O11" source="turn_o" target="O11">
-      <arcpath curvepoint="false" id="source" x="937" y="327"/>
-      <arcpath curvepoint="false" id="target" x="604" y="242"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="O11 to turn_x" source="O11" target="turn_x">
-      <arcpath curvepoint="false" id="source" x="604" y="242"/>
-      <arcpath curvepoint="false" id="target" x="181" y="152"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="m22 to O22" source="m22" target="O22">
-      <arcpath curvepoint="false" id="source" x="749" y="421"/>
-      <arcpath curvepoint="false" id="target" x="795" y="419"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="turn_o to O22" source="turn_o" target="O22">
-      <arcpath curvepoint="false" id="source" x="937" y="327"/>
-      <arcpath curvepoint="false" id="target" x="795" y="419"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="O22 to turn_x" source="O22" target="turn_x">
-      <arcpath curvepoint="false" id="source" x="795" y="419"/>
-      <arcpath curvepoint="false" id="target" x="181" y="152"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="m10 to O10" source="m10" target="O10">
-      <arcpath curvepoint="false" id="source" x="391" y="242"/>
-      <arcpath curvepoint="false" id="target" x="436" y="242"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="turn_o to O10" source="turn_o" target="O10">
-      <arcpath curvepoint="false" id="source" x="937" y="327"/>
-      <arcpath curvepoint="false" id="target" x="436" y="242"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="O10 to turn_x" source="O10" target="turn_x">
-      <arcpath curvepoint="false" id="source" x="436" y="242"/>
-      <arcpath curvepoint="false" id="target" x="181" y="152"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="m21 to O21" source="m21" target="O21">
-      <arcpath curvepoint="false" id="source" x="556" y="422"/>
-      <arcpath curvepoint="false" id="target" x="606" y="424"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="turn_o to O21" source="turn_o" target="O21">
-      <arcpath curvepoint="false" id="source" x="937" y="327"/>
-      <arcpath curvepoint="false" id="target" x="606" y="424"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="O21 to turn_x" source="O21" target="turn_x">
-      <arcpath curvepoint="false" id="source" x="606" y="424"/>
-      <arcpath curvepoint="false" id="target" x="181" y="152"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="m02 to O02" source="m02" target="O02">
-      <arcpath curvepoint="false" id="source" x="744" y="63"/>
-      <arcpath curvepoint="false" id="target" x="792" y="63"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="turn_o to O02" source="turn_o" target="O02">
-      <arcpath curvepoint="false" id="source" x="937" y="327"/>
-      <arcpath curvepoint="false" id="target" x="792" y="63"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="O02 to turn_x" source="O02" target="turn_x">
-      <arcpath curvepoint="false" id="source" x="792" y="63"/>
+    <arc id="O01 to turn_x" source="O01" target="turn_x">
+      <arcpath curvepoint="false" id="source" x="604" y="58"/>
       <arcpath curvepoint="false" id="target" x="181" y="152"/>
       <type value="normal"/>
       <inscription>
@@ -1024,8 +1140,8 @@
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="O01 to turn_x" source="O01" target="turn_x">
-      <arcpath curvepoint="false" id="source" x="604" y="58"/>
+    <arc id="O12 to turn_x" source="O12" target="turn_x">
+      <arcpath curvepoint="false" id="source" x="799" y="247"/>
       <arcpath curvepoint="false" id="target" x="181" y="152"/>
       <type value="normal"/>
       <inscription>
@@ -1048,16 +1164,16 @@
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="O12 to turn_x" source="O12" target="turn_x">
-      <arcpath curvepoint="false" id="source" x="799" y="247"/>
-      <arcpath curvepoint="false" id="target" x="181" y="152"/>
+    <arc id="m10 to X10" source="m10" target="X10">
+      <arcpath curvepoint="false" id="source" x="391" y="242"/>
+      <arcpath curvepoint="false" id="target" x="335" y="243"/>
       <type value="normal"/>
       <inscription>
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="m10 to X10" source="m10" target="X10">
-      <arcpath curvepoint="false" id="source" x="391" y="242"/>
+    <arc id="turn_x to X10" source="turn_x" target="X10">
+      <arcpath curvepoint="false" id="source" x="181" y="152"/>
       <arcpath curvepoint="false" id="target" x="335" y="243"/>
       <type value="normal"/>
       <inscription>
@@ -1072,16 +1188,16 @@
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="turn_x to X10" source="turn_x" target="X10">
-      <arcpath curvepoint="false" id="source" x="181" y="152"/>
-      <arcpath curvepoint="false" id="target" x="335" y="243"/>
+    <arc id="m21 to X21" source="m21" target="X21">
+      <arcpath curvepoint="false" id="source" x="556" y="422"/>
+      <arcpath curvepoint="false" id="target" x="505" y="422"/>
       <type value="normal"/>
       <inscription>
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="m21 to X21" source="m21" target="X21">
-      <arcpath curvepoint="false" id="source" x="556" y="422"/>
+    <arc id="turn_x to X21" source="turn_x" target="X21">
+      <arcpath curvepoint="false" id="source" x="181" y="152"/>
       <arcpath curvepoint="false" id="target" x="505" y="422"/>
       <type value="normal"/>
       <inscription>
@@ -1096,16 +1212,16 @@
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="turn_x to X21" source="turn_x" target="X21">
-      <arcpath curvepoint="false" id="source" x="181" y="152"/>
-      <arcpath curvepoint="false" id="target" x="505" y="422"/>
+    <arc id="m20 to X20" source="m20" target="X20">
+      <arcpath curvepoint="false" id="source" x="385" y="423"/>
+      <arcpath curvepoint="false" id="target" x="333" y="422"/>
       <type value="normal"/>
       <inscription>
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="m20 to X20" source="m20" target="X20">
-      <arcpath curvepoint="false" id="source" x="385" y="423"/>
+    <arc id="turn_x to X20" source="turn_x" target="X20">
+      <arcpath curvepoint="false" id="source" x="181" y="152"/>
       <arcpath curvepoint="false" id="target" x="333" y="422"/>
       <type value="normal"/>
       <inscription>
@@ -1120,9 +1236,9 @@
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="turn_x to X20" source="turn_x" target="X20">
+    <arc id="turn_x to X01" source="turn_x" target="X01">
       <arcpath curvepoint="false" id="source" x="181" y="152"/>
-      <arcpath curvepoint="false" id="target" x="333" y="422"/>
+      <arcpath curvepoint="false" id="target" x="500" y="59"/>
       <type value="normal"/>
       <inscription>
         <value>Default,1</value>
@@ -1144,9 +1260,9 @@
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="turn_x to X01" source="turn_x" target="X01">
+    <arc id="turn_x to X12" source="turn_x" target="X12">
       <arcpath curvepoint="false" id="source" x="181" y="152"/>
-      <arcpath curvepoint="false" id="target" x="500" y="59"/>
+      <arcpath curvepoint="false" id="target" x="692" y="245"/>
       <type value="normal"/>
       <inscription>
         <value>Default,1</value>
@@ -1168,16 +1284,16 @@
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="turn_x to X12" source="turn_x" target="X12">
-      <arcpath curvepoint="false" id="source" x="181" y="152"/>
-      <arcpath curvepoint="false" id="target" x="692" y="245"/>
+    <arc id="m00 to X00" source="m00" target="X00">
+      <arcpath curvepoint="false" id="source" x="389" y="62"/>
+      <arcpath curvepoint="false" id="target" x="337" y="61"/>
       <type value="normal"/>
       <inscription>
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="m00 to X00" source="m00" target="X00">
-      <arcpath curvepoint="false" id="source" x="389" y="62"/>
+    <arc id="turn_x to X00" source="turn_x" target="X00">
+      <arcpath curvepoint="false" id="source" x="181" y="152"/>
       <arcpath curvepoint="false" id="target" x="337" y="61"/>
       <type value="normal"/>
       <inscription>
@@ -1192,16 +1308,16 @@
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="turn_x to X00" source="turn_x" target="X00">
-      <arcpath curvepoint="false" id="source" x="181" y="152"/>
-      <arcpath curvepoint="false" id="target" x="337" y="61"/>
+    <arc id="m11 to X11" source="m11" target="X11">
+      <arcpath curvepoint="false" id="source" x="554" y="244"/>
+      <arcpath curvepoint="false" id="target" x="504" y="243"/>
       <type value="normal"/>
       <inscription>
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="m11 to X11" source="m11" target="X11">
-      <arcpath curvepoint="false" id="source" x="554" y="244"/>
+    <arc id="turn_x to X11" source="turn_x" target="X11">
+      <arcpath curvepoint="false" id="source" x="181" y="152"/>
       <arcpath curvepoint="false" id="target" x="504" y="243"/>
       <type value="normal"/>
       <inscription>
@@ -1216,16 +1332,16 @@
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="turn_x to X11" source="turn_x" target="X11">
-      <arcpath curvepoint="false" id="source" x="181" y="152"/>
-      <arcpath curvepoint="false" id="target" x="504" y="243"/>
+    <arc id="m22 to X22" source="m22" target="X22">
+      <arcpath curvepoint="false" id="source" x="749" y="421"/>
+      <arcpath curvepoint="false" id="target" x="695" y="422"/>
       <type value="normal"/>
       <inscription>
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="m22 to X22" source="m22" target="X22">
-      <arcpath curvepoint="false" id="source" x="749" y="421"/>
+    <arc id="turn_x to X22" source="turn_x" target="X22">
+      <arcpath curvepoint="false" id="source" x="181" y="152"/>
       <arcpath curvepoint="false" id="target" x="695" y="422"/>
       <type value="normal"/>
       <inscription>
@@ -1240,9 +1356,17 @@
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="turn_x to X22" source="turn_x" target="X22">
-      <arcpath curvepoint="false" id="source" x="181" y="152"/>
-      <arcpath curvepoint="false" id="target" x="695" y="422"/>
+    <arc id="WIN_X to OUT_X" source="WIN_X" target="OUT_X">
+      <arcpath curvepoint="false" id="source" x="718" y="498"/>
+      <arcpath curvepoint="false" id="target" x="637" y="569"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="turn_o to WIN_X" source="turn_o" target="WIN_X">
+      <arcpath curvepoint="false" id="source" x="937" y="327"/>
+      <arcpath curvepoint="false" id="target" x="718" y="498"/>
       <type value="normal"/>
       <inscription>
         <value>Default,1</value>
@@ -1250,6 +1374,14 @@
     </arc>
     <arc id="m02 to X02" source="m02" target="X02">
       <arcpath curvepoint="false" id="source" x="744" y="63"/>
+      <arcpath curvepoint="false" id="target" x="692" y="60"/>
+      <type value="normal"/>
+      <inscription>
+        <value>Default,1</value>
+      </inscription>
+    </arc>
+    <arc id="turn_x to X02" source="turn_x" target="X02">
+      <arcpath curvepoint="false" id="source" x="181" y="152"/>
       <arcpath curvepoint="false" id="target" x="692" y="60"/>
       <type value="normal"/>
       <inscription>
@@ -1264,17 +1396,9 @@
         <value>Default,1</value>
       </inscription>
     </arc>
-    <arc id="turn_x to X02" source="turn_x" target="X02">
-      <arcpath curvepoint="false" id="source" x="181" y="152"/>
-      <arcpath curvepoint="false" id="target" x="692" y="60"/>
-      <type value="normal"/>
-      <inscription>
-        <value>Default,1</value>
-      </inscription>
-    </arc>
-    <arc id="END_O to complete" source="END_O" target="complete">
+    <arc id="END_O to REFUND" source="END_O" target="REFUND">
       <arcpath curvepoint="false" id="source" x="851" y="512"/>
-      <arcpath curvepoint="false" id="target" x="572" y="540"/>
+      <arcpath curvepoint="false" id="target" x="530" y="562"/>
       <type value="normal"/>
       <inscription>
         <value>Default,1</value>

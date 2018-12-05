@@ -8,13 +8,19 @@ import (
 	"testing"
 )
 
-func TestGenerateStateMachineCode(t *testing.T) {
-	p, s := statemachine.LoadPnmlFromFile("../pnml/counter.xml")
-	src := statemachine.Generate(p, "CounterV1")
-	ioutil.WriteFile("counter.go", src.Bytes(), 0600)
-	println(src.String())
-	assert.Nil(t, nil)
-	_ = s
+func genStateMachine(path string, varName string, filename string) statemachine.PetriNet {
+	p, _ := statemachine.LoadPnmlFromFile(path)
+	src := statemachine.Generate(p, varName)
+	ioutil.WriteFile(filename, src.Bytes(), 0600)
+	//println(src.String())
+	return p
+}
+
+func TestGenerateStateMachines(t *testing.T) {
+	// NOTE: overwrites source files
+	//genStateMachine("../pnml/counter.xml", "CounterV1", "counter.go")
+	//genStateMachine("../pnml/option.xml", "OptionV1", "option.go")
+	genStateMachine("../pnml/octoe.xml", "OctoeV1", "octoe.go")
 }
 
 func TestUsingGeneratedSource(t *testing.T) {
@@ -22,5 +28,6 @@ func TestUsingGeneratedSource(t *testing.T) {
 	m.Init()
 	_, err := m.Transform("INC_0", 1)
 	assert.Nil(t, err)
-
+	assert.NotNil(t, gen.OptionV1)
+	assert.NotNil(t, gen.OctoeV1)
 }

@@ -7,6 +7,7 @@ import (
 	. "github.com/FactomProject/ptnet-eventstore/identity"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
 	"github.com/FactomProject/ptnet-eventstore/x"
+	. "github.com/stackdump/gopetri/statemachine"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -25,7 +26,7 @@ func commit(t *testing.T, action string, key PrivateKey, expectError bool) (fini
 			ContractID: optionContractID,
 			Schema:     ptnet.OptionV1, // state machine version
 			Action:     action,         // state machine action
-			Amount:     1,              // triggers input action 'n' times
+			Mult:       1,              // triggers input action 'n' times
 			Payload:    nil,            // arbitrary data optionally included
 			Pubkey:     pub,
 		},
@@ -43,21 +44,23 @@ func commit(t *testing.T, action string, key PrivateKey, expectError bool) (fini
 
 func TestTransactionSequence(t *testing.T) {
 	offer := finite.OptionContract()
+	offer.ChainID = contract.CHAIN_ID
 
+	//println(offer.String())
 	t.Run("publish offer", func(t *testing.T) {
 		txn := finite.OfferTransaction(offer, Private[DEPOSITOR])
 		assert.Equal(t, true, contract.Exists(offer.Schema, optionContractID), "missing declaration")
 		assert.Equal(t, txn.Oid, optionContractID)
 		assert.Equal(t, txn.Action, ptnet.BEGIN, "")
-		assert.Equal(t, txn.InputState, ptnet.StateVector{1, 1, 1, 1, 1})
-		assert.Equal(t, txn.OutputState, ptnet.StateVector{1, 0, 0, 1, 0})
+		assert.Equal(t, txn.InputState, StateVector{1, 0, 0, 0, 0})
+		assert.Equal(t, txn.OutputState, StateVector{0, 1, 0, 0, 0})
 		assert.False(t, contract.IsHalted(offer.Declaration))
 	})
 
 	t.Run("execute transactions to accept offer", func(t *testing.T) {
 		commit(t, "OPT_1", Private[USER1], expectValid)
 		commit(t, "OPT_2", Private[DEPOSITOR], expectError) // only first executed option is valid
-		commit(t, "HALT", Private[DEPOSITOR], expectValid)
+		commit(t, "HALT", Private[DEPOSITOR], expectError)
 	})
 
 	t.Run("redeem completed contract", func(t *testing.T) {

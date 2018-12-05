@@ -10,11 +10,10 @@ import (
 	"fmt"
 	"github.com/FactomProject/ptnet-eventstore/identity"
 	"github.com/hashicorp/go-memdb"
+	. "github.com/stackdump/gopetri/statemachine"
 	"time"
 )
 
-type StateVector []uint64
-type Transition []int64
 
 // Reserved Actions
 // Only "BEGIN" Action is required
@@ -30,8 +29,7 @@ type State struct {
 }
 
 type Machine struct {
-	Initial     StateVector           `json:"initial"`
-	Transitions map[string]Transition `json:"transitions"`
+	StateMachine
 	db          *memdb.MemDB
 }
 
@@ -161,12 +159,14 @@ func beforeCommit(evt *Event) error {
 }
 
 // update apply vector addition and update output State
+// FIXME refactor to use StateMachine methods
 func VectorAdd(vectorIn []uint64, transform []int64, multiplier uint64) ([]uint64, error) {
 	var vectorOut []uint64
 	var err error = nil
 
 	for offset, delta := range transform {
 		val := int64(vectorIn[offset]) + delta*int64(multiplier)
+		// FIXME check against capacity
 		if val >= 0 {
 			vectorOut = append(vectorOut, uint64(val))
 		} else {
@@ -178,6 +178,7 @@ func VectorAdd(vectorIn []uint64, transform []int64, multiplier uint64) ([]uint6
 
 }
 
+// FIXME refactor to use StateMachine methods
 func vectorApply(vectorIn []uint64, transform []int64, multiplier uint64, stateOut *State) error {
 	var err error
 	stateOut.Vector, err = VectorAdd(vectorIn, transform, multiplier)
@@ -186,13 +187,14 @@ func vectorApply(vectorIn []uint64, transform []int64, multiplier uint64, stateO
 
 // add transform*multiplier to input vector and save valid output to state
 // optionally persist to the eventstore
+// FIXME refactor to use StateMachine methods
 func applyTransform(machine Machine, event *Event, persistEvent bool, precondition func(*Event) error, callback func(*Event)) error {
 
 	if machine.Initial == nil {
 		return errors.New(fmt.Sprintf("Unknown schema: %v", event.Schema))
 	}
 
-	actionVector := machine.Transitions[event.Action]
+	actionVector := machine.Transitions[Action(event.Action)]
 	if actionVector == nil {
 		return errors.New(fmt.Sprintf("Unknown action: %v", event.Action))
 	}
@@ -208,7 +210,7 @@ func applyTransform(machine Machine, event *Event, persistEvent bool, preconditi
 	if raw == nil {
 		// REVIEW: eventually refactor to make this a cache-miss
 		// use initial iff a given OID not found in leveldb
-		inputVector = machine.Initial
+		inputVector = machine.StateMachine.Initial
 	} else {
 		inputVector = raw.(State).Vector
 	}
@@ -254,9 +256,9 @@ Timestamp:   {{ .Timestamp }}
 Schema:      {{ .Schema }}
 Action:      {{ .Action }}
 Oid:         {{ .Oid }}
-Value:       {{ .Value }}
-InputState:  {{ .InputState }}
-OutputState: {{ .OutputState }}
+Mult:        {{ .Value }}
+InputState:  {{ .VectorIn }}
+OutputState: {{ .VectorOut }}
 Payload:
 	{{ printf "%x" .Payload }}
 digest:
@@ -270,8 +272,28 @@ var eventTemplate *template.Template = template.Must(
 	template.New("").Parse(eventFormat),
 )
 
+type eventSource struct {
+	*Event
+}
+
+func ToVector(vector StateVector) []uint64 {
+	x := []uint64{}
+	for _, v := range vector {
+		x = append(x, v)
+	}
+	return x
+}
+
+func (s eventSource) VectorIn() []uint64 {
+	return ToVector(s.InputState)
+}
+
+func (s eventSource) VectorOut() []uint64 {
+	return ToVector(s.OutputState)
+}
+
 func (e *Event) String() string {
 	b := &bytes.Buffer{}
-	eventTemplate.Execute(b, e)
+	eventTemplate.Execute(b, eventSource{e})
 	return b.String()
 }
