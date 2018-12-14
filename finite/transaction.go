@@ -8,16 +8,16 @@ import (
 	"text/template"
 )
 
-type Offer struct{
+type Offer struct {
 	contract.Declaration
 	ChainID string
 }
 
-type Execution struct{
+type Execution struct {
 	contract.Command
 }
 
-type Transaction struct{
+type Transaction struct {
 	*ptnet.Event
 }
 
@@ -68,7 +68,7 @@ func (offer Offer) String() string {
 	return b.String()
 }
 
-func (s offerSource) GetState() []uint64{
+func (s offerSource) GetState() []uint64 {
 	return ptnet.ToVector(s.State)
 }
 

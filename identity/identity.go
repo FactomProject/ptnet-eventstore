@@ -31,25 +31,25 @@ var PLAYERO string = "PLAYERO"
 
 var Private = map[string]PrivateKey{
 	DEPOSITOR: NewPrivateKey(10000),
-	USER1: NewPrivateKey(10001),
-	USER2: NewPrivateKey(10002),
-	PLAYERX: NewPrivateKey(10003),
-	PLAYERO: NewPrivateKey(10004),
+	USER1:     NewPrivateKey(10001),
+	USER2:     NewPrivateKey(10002),
+	PLAYERX:   NewPrivateKey(10003),
+	PLAYERO:   NewPrivateKey(10004),
 }
 
 var Public = map[string]PublicKey{
 	DEPOSITOR: PrivateKeyToPub(Private[DEPOSITOR]),
-	USER1: PrivateKeyToPub(Private[USER1]),
-	USER2: PrivateKeyToPub(Private[USER2]),
-	PLAYERX: PrivateKeyToPub(Private[PLAYERX]),
-	PLAYERO: PrivateKeyToPub(Private[PLAYERO]),
+	USER1:     PrivateKeyToPub(Private[USER1]),
+	USER2:     PrivateKeyToPub(Private[USER2]),
+	PLAYERX:   PrivateKeyToPub(Private[PLAYERX]),
+	PLAYERO:   PrivateKeyToPub(Private[PLAYERO]),
 }
 var Address = map[string]FctAddress{
 	DEPOSITOR: PublicKeyToAddress(Public[DEPOSITOR]),
-	USER1: PublicKeyToAddress(Public[USER1]),
-	USER2: PublicKeyToAddress(Public[USER2]),
-	PLAYERX: PublicKeyToAddress(Public[PLAYERX]),
-	PLAYERO: PublicKeyToAddress(Public[PLAYERO]),
+	USER1:     PublicKeyToAddress(Public[USER1]),
+	USER2:     PublicKeyToAddress(Public[USER2]),
+	PLAYERX:   PublicKeyToAddress(Public[PLAYERX]),
+	PLAYERO:   PublicKeyToAddress(Public[PLAYERO]),
 }
 
 func PublicKeyToAddress(publicKey PublicKey) []byte {

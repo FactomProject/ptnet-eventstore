@@ -1,5 +1,5 @@
-hash: 8eeddc40dd7a71cb0353ced5854541446f70b979b978a3363beac332268ea918
-updated: 2018-11-30T11:20:58.102268569-06:00
+hash: e2d0762413a0f4a1edd4427159c34da2038cbd57ccdb19144169cc915aca10c2
+updated: 2018-12-13T15:03:26.364420526-06:00
 imports:
 - name: github.com/beorn7/perks
   version: 3a771d992973f24aa725d07868b467d1ddfceafb
@@ -27,7 +27,9 @@ imports:
 - name: github.com/FactomProject/factom
   version: 92b9a9bb5aa25574d8b950bf4e9daec78c8980b2
 - name: github.com/FactomProject/factomd
-  version: e502c6e9817b3502cf9c9122a2e1b33e5fc0fc9f
+  version: d2cbb66cc747f3c02c7fa242799e8c2ed14f5e9e
+  repo: git@github.com:FactomProject/factomd.git
+  vcs: git
   subpackages:
   - Utilities/CorrectChainHeads/correctChainHeads
   - Utilities/tools
@@ -48,8 +50,14 @@ imports:
   - common/messages
   - common/messages/electionMsgs
   - common/messages/msgbase
+  - common/messages/msgsupport
   - common/primitives
   - common/primitives/random
+  - controlPanel
+  - controlPanel/dataDumpFormatting
+  - controlPanel/files
+  - controlPanel/files/statics
+  - controlPanel/files/templates
   - database/blockExtractor
   - database/boltdb
   - database/databaseOverlay
@@ -63,6 +71,7 @@ imports:
   - electionsCore/imessage
   - electionsCore/messages
   - electionsCore/primitives
+  - engine
   - log
   - p2p
   - receipts
@@ -98,28 +107,49 @@ imports:
   version: 9c7278ede46e1ccc03f0b17d6663730c340acb81
 - name: github.com/FactomProject/netki-go-partner-client
   version: 426acb535e66cc2f9e6226ae254555e3572fd142
+- name: github.com/FactomProject/serveridentity
+  version: cf42d2aa8debbe9a690e8c12b7a9fcda127d3f2c
+  subpackages:
+  - identity
+  - utils
 - name: github.com/FactomProject/snappy-go
   version: f2f83b22c29e5abc60e3a95062ce1491d3b95371
 - name: github.com/FactomProject/web
-  version: 7daee1bf727fc2cd9142b9a73a797f98b3180756
+  version: 5bb394cc64239b77f571bbddc9a47c80c4d2283f
+  repo: git@github.com:FactomProject/web.git
+  vcs: git
 - name: github.com/golang/protobuf
   version: ddf22928ea3c56eb4292a0adbbf5001b1e8e7d0d
   subpackages:
   - proto
+  - ptypes
+  - ptypes/any
+  - ptypes/duration
+  - ptypes/timestamp
+- name: github.com/hashicorp/go-hclog
+  version: 61d530d6c27f994fb6c83b80f99a69c54125ec8a
 - name: github.com/hashicorp/go-immutable-radix
   version: 27df80928bb34bb1b0d6d0e01b9e679902e7a6b5
 - name: github.com/hashicorp/go-memdb
   version: 1289e7fffe71d8fd4d4d491ba9a412c50f244c44
+- name: github.com/hashicorp/go-plugin
+  version: 314501b665e0b2cc71bbd829783179fc38840a85
 - name: github.com/hashicorp/golang-lru
   version: 20f1fb78b0740ba8c3cb143a61e86ba5c8669768
   subpackages:
   - simplelru
+- name: github.com/hashicorp/yamux
+  version: 2f1d1f20f75d5404f53b9edf6b53ed5505508675
 - name: github.com/konsorten/go-windows-terminal-sequences
   version: 5c8c8bd35d3832f5d134ae1e1e375b69a4d25242
 - name: github.com/matttproud/golang_protobuf_extensions
   version: c12348ce28de40eed0136aa2b644d0ee0650e56c
   subpackages:
   - pbutil
+- name: github.com/mitchellh/go-testing-interface
+  version: 6d0b8010fcc857872e42fc6c931227569016843c
+- name: github.com/oklog/run
+  version: 6934b124db28979da51d3470dadfa34d73d72652
 - name: github.com/prometheus/client_golang
   version: 1cafe34db7fdec6022e17e00e1c1ea501022f3e4
   subpackages:
@@ -141,10 +171,14 @@ imports:
   - internal/util
   - nfs
   - xfs
+- name: github.com/rs/cors
+  version: a3460e445dd310dbefee993fe449f2ff9c08ae71
 - name: github.com/sirupsen/logrus
   version: 680f584d621da87ee04ea659130e149ba9d23cae
 - name: github.com/stackdump/gopetri
-  version: 40ea7bc2a84ed2b72deea1453ce53f89d961883a
+  version: def7d57b5b4a076c008aad6950ddaa164b5bfeb6
+  repo: git@github.com:stackdump/gopetri.git
+  vcs: git
   subpackages:
   - pnml
   - statemachine
@@ -161,12 +195,60 @@ imports:
 - name: golang.org/x/net
   version: 04a2e542c03f1d053ab3e4d6e5abcd4b66e2be8e
   subpackages:
+  - context
+  - http/httpguts
+  - http2
+  - http2/hpack
+  - idna
+  - internal/timeseries
+  - trace
   - websocket
 - name: golang.org/x/sys
   version: fa43e7bc11baaae89f3f902b2b4d832b68234844
   subpackages:
   - unix
   - windows
+- name: golang.org/x/text
+  version: 4d1c5fb19474adfe9562c9847ba425e7da817e81
+  subpackages:
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
+- name: google.golang.org/genproto
+  version: 94acd270e44e65579b9ee3cdab25034d33fed608
+  subpackages:
+  - googleapis/rpc/status
+- name: google.golang.org/grpc
+  version: 23d111fa0dab0e9b31490819a23c2ef227f4b3dc
+  subpackages:
+  - balancer
+  - balancer/base
+  - balancer/roundrobin
+  - codes
+  - connectivity
+  - credentials
+  - encoding
+  - encoding/proto
+  - grpclog
+  - health
+  - health/grpc_health_v1
+  - internal
+  - internal/backoff
+  - internal/channelz
+  - internal/envconfig
+  - internal/grpcrand
+  - internal/transport
+  - keepalive
+  - metadata
+  - naming
+  - peer
+  - resolver
+  - resolver/dns
+  - resolver/passthrough
+  - stats
+  - status
+  - tap
 - name: gopkg.in/gcfg.v1
   version: 61b2c08bc8f6068f7c5ca684372f9a6cb1c45ebe
   subpackages:

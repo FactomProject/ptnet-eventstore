@@ -26,15 +26,15 @@ var StateMachines map[string]Machine = map[string]Machine{
 
 var optionMachine Machine = Machine{
 	StateMachine: gen.OptionV1.StateMachine(),
-	db: EventStore(),
+	db:           EventStore(),
 }
 
 var counterMachine Machine = Machine{
 	StateMachine: gen.CounterV1.StateMachine(),
-	db: EventStore(),
+	db:           EventStore(),
 }
 
 var octoeMachine Machine = Machine{
 	StateMachine: gen.OctoeV1.StateMachine(),
-	db: EventStore(),
+	db:           EventStore(),
 }

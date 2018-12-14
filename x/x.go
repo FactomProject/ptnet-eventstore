@@ -1,11 +1,16 @@
 package x
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"github.com/FactomProject/ed25519"
+	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factomd/common/factoid"
 	"github.com/FactomProject/factomd/common/primitives"
+	"github.com/FactomProject/factomd/engine"
+	"github.com/FactomProject/factomd/state"
 	"github.com/FactomProject/factomd/testHelper"
+	"time"
 )
 
 var FactoidPrefix = []byte{0x5f, 0xb1}
@@ -27,9 +32,59 @@ func Shad(data []byte) []byte {
 }
 
 // FIXME: copy FCT address sting funcs into this package
-var ConvertAddressToUser       = primitives.ConvertAddressToUser
+var ConvertAddressToUser = primitives.ConvertAddressToUser
 var ConvertFctAddressToUserStr = primitives.ConvertFctAddressToUserStr
 var ConvertFctPrivateToUserStr = primitives.ConvertFctPrivateToUserStr
-var ValidateFUserStr           = primitives.ValidateFUserStr
-var ValidateFPrivateUserStr    = primitives.ValidateFPrivateUserStr
-var ConvertUserStrToAddress    = primitives.ConvertUserStrToAddress
+var ValidateFUserStr = primitives.ValidateFUserStr
+var ValidateFPrivateUserStr = primitives.ValidateFPrivateUserStr
+
+var ComposeCommitEntryMsg = testHelper.ComposeCommitEntryMsg
+var ComposeRevealEntryMsg = testHelper.ComposeRevealEntryMsg
+var ComposeChainCommit = testHelper.ComposeChainCommit
+
+var FundWallet = engine.FundWallet
+var FundECWallet = engine.FundECWallet
+
+var AccountFromFctSecret = testHelper.AccountFromFctSecret
+var GetRandomAccount = testHelper.GetRandomAccount()
+var GetBankAccount = testHelper.GetBankAccount // funded by genesis block
+
+var GetBalanceEC = engine.GetBalanceEC
+var GetBalance = engine.GetBalance
+
+var ShutDownEverything = testHelper.ShutDownEverything
+var WaitForAllNodes = testHelper.WaitForAllNodes
+var WaitBlocks = testHelper.WaitBlocks
+var SetupSim = testHelper.SetupSim
+
+
+func WaitForEcBalance(s *state.State, ecPub string) int64 {
+	var bal int64 = 0
+
+	for {
+		bal = GetBalanceEC(s, ecPub)
+		time.Sleep(time.Millisecond * 200)
+		//fmt.Printf("WaitForBalance: %v => %v\n", ecPub, bal)
+
+		if bal > 0 {
+			return bal
+		}
+	}
+}
+
+var NewChain = factom.NewChain
+
+func Entry(chainID string, extIDs  [][]byte, content []byte) factom.Entry {
+	return factom.Entry{
+		ChainID: chainID,
+		ExtIDs:  extIDs,
+		Content: content,
+
+	}
+}
+
+func Encode(s string) []byte {
+	b := bytes.Buffer{}
+	b.WriteString(s)
+	return b.Bytes()
+}

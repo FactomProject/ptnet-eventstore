@@ -7,3 +7,4 @@ ptnetTest
 *.out
 *.log
 .ipynb_checkpoints
+*.txt

@@ -32,6 +32,7 @@ func commit(t *testing.T, action string, key PrivateKey, expectError bool) (fini
 		},
 	}, key)
 
+	println(txn.String())
 	var msg string
 	if expectError {
 		msg = fmt.Sprintf("expected action %v to return an error ", action)

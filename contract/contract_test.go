@@ -24,7 +24,7 @@ func commit(t *testing.T, action string, key PrivateKey, expectError bool) (*ptn
 		ContractID: "|OctoeContractID|",
 		Schema:     ptnet.OctoeV1, // state machine version
 		Action:     action,        // state machine action
-		Mult:	    1,             // triggers input action 'n' times
+		Mult:       1,             // triggers input action 'n' times
 		Payload:    nil,           // arbitrary data optionally included
 		Pubkey:     pub,
 	}, key)
@@ -78,6 +78,5 @@ func TestTransactionSequence(t *testing.T) {
 			assert.False(t, contract.CanRedeem(c, Public[DEPOSITOR]))
 		})
 	})
-
 
 }

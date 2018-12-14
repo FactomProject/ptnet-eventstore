@@ -1,13 +1,13 @@
 package: github.com/FactomProject/ptnet-eventstore
 import:
 - package: github.com/FactomProject/web
-  version: develop
-- package: github.com/FactomProject/goleveldb
-  version: master
-  subpackages:
-  - leveldb
-  - leveldb/opt
-  - leveldb/util
+  vcs: git
+  version: FD-654_adding_CORS
+  repo: git@github.com:FactomProject/web.git
+- package: github.com/FactomProject/factomd
+  vcs: git
+  version: FD-771_commit_reveal_sim_testing 
+  repo: git@github.com:FactomProject/factomd.git
 - package: github.com/hashicorp/go-memdb
 - package: github.com/hashicorp/go-immutable-radix
   version: v1.0.0
@@ -16,6 +16,9 @@ import:
   subpackages:
   - assert
 - package: github.com/stackdump/gopetri
+  vcs: git
+  version: master
+  repo: git@github.com:stackdump/gopetri.git
   subpackages:
   - pnml
   - statemachine

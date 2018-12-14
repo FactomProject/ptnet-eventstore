@@ -19,7 +19,7 @@ import (
 var CHAIN_ID string = "|ChainID|"
 
 type Contract struct {
-	Schema  string        `json:"schema"`
+	Schema  string       `json:"schema"`
 	Machine StateMachine `json:"state_machine""`
 	db      *memdb.MemDB
 }
@@ -32,17 +32,17 @@ type AddressAmountMap struct {
 type Condition Transition
 
 type Declaration struct {
-	Inputs      []AddressAmountMap          `json:"inputs"`
-	Outputs     []AddressAmountMap          `json:"outputs"`
-	BlockHeight uint64                      `json:"blockheight"`
-	Salt        string                      `json:"salt"`
-	ContractID  string                      `json:"contractid"`
-	Schema      string                      `json:"schema"`
-	Capacity    StateVector					`json:"capacity"`
-	State       StateVector					`json:"state"`
-	Actions     map[Action]Transition 		`json:"actions"`
-	Guards      []Condition                 `json:"guards"`     // enforces contract roles
-	Conditions  []Condition                 `json:"conditions"` // enforce redeem conditions
+	Inputs      []AddressAmountMap    `json:"inputs"`
+	Outputs     []AddressAmountMap    `json:"outputs"`
+	BlockHeight uint64                `json:"blockheight"`
+	Salt        string                `json:"salt"`
+	ContractID  string                `json:"contractid"`
+	Schema      string                `json:"schema"`
+	Capacity    StateVector           `json:"capacity"`
+	State       StateVector           `json:"state"`
+	Actions     map[Action]Transition `json:"actions"`
+	Guards      []Condition           `json:"guards"`     // enforces contract roles
+	Conditions  []Condition           `json:"conditions"` // enforce redeem conditions
 }
 
 type State struct {
@@ -108,7 +108,7 @@ func create(contract Declaration, chainID string, signfunc func(*ptnet.Event) er
 			ContractID: contract.ContractID,
 			Schema:     contract.Schema,
 			Action:     ptnet.BEGIN,     // state machine action
-			Mult:	    1,               // triggers input action 'n' times
+			Mult:       1,               // triggers input action 'n' times
 			Payload:    []byte(payload), // arbitrary data optionally included
 			Pubkey:     pubkey,          // REVIEW: will there always be a single input?
 		}, signfunc)
@@ -255,6 +255,7 @@ func CanRedeem(contract Declaration, publicKey identity.PublicKey) bool {
 
 	return false
 }
+
 var contractFormat string = `
 Inputs: {{ range $_, $input := .Inputs}}
 	Address: {{ printf "%x" $input.Address }} Amount: {{ $input.Amount }} {{ end }}
@@ -280,7 +281,7 @@ type contractSource struct {
 	Declaration
 }
 
-func(c contractSource) GetState() (s []uint64) {
+func (c contractSource) GetState() (s []uint64) {
 	return ptnet.ToVector(s)
 }
 
@@ -290,16 +291,15 @@ func (contract Declaration) String() string {
 	return b.String()
 }
 
-
 // Dual is a vector that won't be used as a transformation
 // instead these vectors provide a way to simulate additional actions
 // to test the current state vector by way of subtraction
 func Dual(p PetriNet, placeNames []string, mult int64) []int64 {
 	role := p.GetEmptyVector()
-	for  _, k := range placeNames {
+	for _, k := range placeNames {
 		attr, ok := p.Places[k]
 		if ok {
-			role[attr.Offset] = mult*-1 // test by subtraction
+			role[attr.Offset] = mult * -1 // test by subtraction
 		} else {
 			panic(fmt.Sprintf("unknown place: %v", k))
 		}

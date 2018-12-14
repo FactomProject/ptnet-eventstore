@@ -1,7 +1,6 @@
 package ptnet
 
 import (
-	"text/template"
 	"bytes"
 	"crypto/sha256"
 	"encoding/gob"
@@ -11,16 +10,12 @@ import (
 	"github.com/FactomProject/ptnet-eventstore/identity"
 	"github.com/hashicorp/go-memdb"
 	. "github.com/stackdump/gopetri/statemachine"
+	"text/template"
 	"time"
 )
 
-
 // Reserved Actions
-// Only "BEGIN" Action is required
-// Optional: Contracts may want to implement standard actions
 const BEGIN string = "EXEC"
-const END string = "HALT"
-const CANCEL string = "FAIL"
 
 type State struct {
 	Oid       string      `json:"oid"`
@@ -30,7 +25,7 @@ type State struct {
 
 type Machine struct {
 	StateMachine
-	db          *memdb.MemDB
+	db *memdb.MemDB
 }
 
 type Event struct {
@@ -38,13 +33,13 @@ type Event struct {
 	Schema      string               `json:"schema"`
 	Action      string               `json:"action"`
 	Oid         string               `json:"oid"`
-	Value       uint64               `json:"value"`
+	Mult        uint64               `json:"value"`
 	InputState  StateVector          `json:"input"`
 	OutputState StateVector          `json:"output"`
 	Payload     []byte               `json:"payload"`
 	pubkeys     []identity.PublicKey // TODO
-	signatures [][]byte // signatures
-	digest     []byte
+	signatures  [][]byte             // signatures
+	digest      []byte
 }
 
 // start a new transaction with in-memory db
@@ -60,7 +55,7 @@ func Commit(schema string, oid string, action string, value uint64, payload []by
 		Schema:      schema,
 		Action:      action,
 		Oid:         oid,
-		Value:       value,
+		Mult:        value,
 		InputState:  nil,
 		OutputState: nil,
 		Payload:     payload,
@@ -70,14 +65,14 @@ func Commit(schema string, oid string, action string, value uint64, payload []by
 	return &event, err
 }
 
-func Transform(schema string, oid string, action string, value uint64, payload []byte, beforeCommitCallback func(*Event) error) (*Event, error) {
+func Transform(schema string, oid string, action string, mult uint64, payload []byte, beforeCommitCallback func(*Event) error) (*Event, error) {
 
 	event := Event{
 		Timestamp:   uint64(time.Now().UnixNano()),
 		Schema:      schema,
 		Action:      action,
 		Oid:         oid,
-		Value:       value,
+		Mult:        mult,
 		InputState:  nil,
 		OutputState: nil,
 		Payload:     payload,
@@ -178,16 +173,25 @@ func VectorAdd(vectorIn []uint64, transform []int64, multiplier uint64) ([]uint6
 
 }
 
-// FIXME refactor to use StateMachine methods
-func vectorApply(vectorIn []uint64, transform []int64, multiplier uint64, stateOut *State) error {
-	var err error
-	stateOut.Vector, err = VectorAdd(vectorIn, transform, multiplier)
+func vectorApply(vectorIn []uint64, transform []int64, multiplier uint64, capacity StateVector, stateOut *State) error {
+	out, err := VectorAdd(vectorIn, transform, multiplier)
+
+	if err != nil {
+		return err
+	}
+
+	for i, v := range capacity {
+		if v > 0 && out[i] > v {
+			return errors.New(fmt.Sprintf("Exceeded Capacity[%v]: %v", i, v))
+		}
+	}
+
+	stateOut.Vector = out
 	return err
 }
 
 // add transform*multiplier to input vector and save valid output to state
 // optionally persist to the eventstore
-// FIXME refactor to use StateMachine methods
 func applyTransform(machine Machine, event *Event, persistEvent bool, precondition func(*Event) error, callback func(*Event)) error {
 
 	if machine.Initial == nil {
@@ -218,7 +222,7 @@ func applyTransform(machine Machine, event *Event, persistEvent bool, preconditi
 	event.InputState = inputVector
 	outState := State{Oid: event.Oid, Timestamp: event.Timestamp}
 
-	err = vectorApply(inputVector, actionVector, event.Value, &outState)
+	err = vectorApply(inputVector, actionVector, event.Mult, machine.Capacity, &outState)
 	if err != nil {
 		txn.Abort()
 		return err
@@ -250,13 +254,12 @@ func applyTransform(machine Machine, event *Event, persistEvent bool, preconditi
 	return err
 }
 
-
 var eventFormat string = `
 Timestamp:   {{ .Timestamp }}
 Schema:      {{ .Schema }}
 Action:      {{ .Action }}
 Oid:         {{ .Oid }}
-Mult:        {{ .Value }}
+Mult:        {{ .Mult }}
 InputState:  {{ .VectorIn }}
 OutputState: {{ .VectorOut }}
 Payload:

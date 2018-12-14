@@ -7,8 +7,7 @@ Allow aggregation of contracts to calculate wallet balances by account.
 ### BACKLOG
 
 - [ ] refactor to use gopetri instead of ptnet everwhere - missing capacity check without this
-- [ ] run w/ fnode sims ? & tap into journaled messages ?
-- [ ] target chain - adopt FAT standard for choosing a chainid to store a given event
+- [ ] run w/ fnode sims ? & tap into journal messages ?
 - [ ] update to work with factom connect or factomd to publish transactions
 - [ ] 'cache miss' should result when a state record is not found in memory when working w/ actual blockchain storage
 - [ ] demo smart contract protocol playback/validation

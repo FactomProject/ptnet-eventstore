@@ -27,22 +27,22 @@ func OptionContract() Declaration {
 			AddressAmountMap{Address[USER1], 1},     // deposit to user1
 			AddressAmountMap{Address[USER2], 1},     // deposit to user2
 		},
-		BlockHeight: 60221409,       // deadline for halting state
-		Salt:        "|RANDOM|",     // added random salt
-		ContractID:  "|OptionContractID|",   // unique ID for this contract instance
-		Schema:      ptnet.OptionV1,         // versioned contract schema
+		BlockHeight: 60221409,              // deadline for halting state
+		Salt:        "|RANDOM|",            // added random salt
+		ContractID:  "|OptionContractID|",  // unique ID for this contract instance
+		Schema:      ptnet.OptionV1,        // versioned contract schema
 		Capacity:    p.GetCapacityVector(), // state machine initial state
 		State:       p.GetInitialState(),   // state machine initial state
-		Actions:     p.Transitions,  // state machine defined transitions
+		Actions:     p.Transitions,         // state machine defined transitions
 		Guards: []Condition{ // guard clause restricts actions
-			Role(p,[]string{"OPEN"}, 1),
-			Role(p,[]string{"OPEN"},1),
-			Role(p,[]string{"OPEN"},1),
+			Role(p, []string{"OPEN"}, 1),
+			Role(p, []string{"OPEN"}, 1),
+			Role(p, []string{"OPEN"}, 1),
 		},
 		Conditions: []Condition{ // contract conditions specify additional redeem conditions
-			Check(p,[]string{"REFUND"},1),
-			Check(p,[]string{"OUT1"},1),
-			Check(p,[]string{"OUT2"},1),
+			Check(p, []string{"REFUND"}, 1),
+			Check(p, []string{"OUT1"}, 1),
+			Check(p, []string{"OUT2"}, 1),
 		},
 	}
 }
@@ -59,21 +59,21 @@ func TicTacToeContract() Declaration {
 			AddressAmountMap{Address[PLAYERX], 1},
 			AddressAmountMap{Address[PLAYERO], 1},
 		},
-		BlockHeight: 60221409,      // deadline for halting state
-		Salt:        "|RANDOM|",    // added random salt
+		BlockHeight: 60221409,              // deadline for halting state
+		Salt:        "|RANDOM|",            // added random salt
 		ContractID:  "|OctoeContractID|",   // unique ID for this contract instance
-		Schema:      "OctoeV1",    // versioned contract schema
+		Schema:      "OctoeV1",             // versioned contract schema
 		Capacity:    p.GetCapacityVector(), // capacity for each place
-		State:       p.GetInitialState(), // initial state
-		Actions:     p.Transitions, // state machine defined transitions
+		State:       p.GetInitialState(),   // initial state
+		Actions:     p.Transitions,         // state machine defined transitions
 		Guards: []Condition{ // guard clause restricts actions
-			Role(p, []string{}, 1), // depositor is unrestricted
+			Role(p, []string{}, 1),         // depositor is unrestricted
 			Role(p, []string{"turn_x"}, 1), // players must
 			Role(p, []string{"turn_o"}, 1), // take turns
 		},
 		Conditions: []Condition{ // contract conditions specify additional redeem conditions
 			Check(p, []string{"REFUND"}, 1), // no winner take 1 token prize back
-			Check(p, []string{"OUT_X"}, 1), // pay player X 1 token
+			Check(p, []string{"OUT_X"}, 1),  // pay player X 1 token
 			Check(p, []string{"OUT_O"}, 1),  // pay player O 1 token
 		},
 	}
