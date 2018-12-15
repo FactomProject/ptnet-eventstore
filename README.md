@@ -6,6 +6,8 @@ Think of this API as a write-ahead-log for stateful blockchain events atop the F
 
 ## Status
 
+[![CircleCI](https://circleci.com/gh/FactomProject/ptnet-eventstore.svg?style=svg)](https://circleci.com/gh/FactomProject/ptnet-eventstore)
+
 Currently this is a Proof-Of-Concept only persisting data in memory
 - eventually will extend to be a proper eventstore using leveldb + persisting to Factom blockchain
 

@@ -1,0 +1,108 @@
+version: 2
+
+jobs:
+
+  build:
+    working_directory: /go/src/github.com/FactomProject/ptnet-eventstore
+    docker:
+      - image: circleci/golang:1.11
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - {{ checksum "glide.lock" }}
+
+      - run:
+          name: Get glide
+          command: |
+            go get -v github.com/Masterminds/glide
+            cd $GOPATH/src/github.com/Masterminds/glide
+            git checkout tags/v0.13.1
+            go install
+      - run:
+          name: Get the dependencies
+          command: |
+            glide install
+      - run:
+          name: Build and install the executable
+          command: go install -v
+
+      - save_cache:
+          key: {{ checksum "glide.lock" }}
+          paths:
+            - vendor
+
+  test:
+    working_directory: /go/src/github.com/FactomProject/ptnet-eventstore
+    docker:
+      - image: circleci/golang:1.11
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - {{ checksum "glide.lock" }}
+
+      - run:
+          name: Get glide
+          command: |
+            go get -v github.com/Masterminds/glide
+            cd $GOPATH/src/github.com/Masterminds/glide
+            git checkout tags/v0.13.1
+            go install
+      - run:
+          name: Get the dependencies
+          command: |
+            glide install
+      - run:
+          name: Build and install the executable
+          command: go install -v
+
+      - run:
+          name: Run tests!
+          no_output_timeout: 2400
+          command: ./test.sh
+
+
+      - save_cache:
+          key: {{ checksum "glide.lock" }}
+          paths:
+            - vendor
+
+# The flow is
+#    build
+#      |
+#      ---------- test
+#                   |
+#
+
+workflows:
+  version: 2
+  commit-workflow:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
+      - test:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - build
+
+  scheduled-workflow:
+    triggers:
+      - schedule:
+          cron: "20 5 * * *"
+          filters:
+            branches:
+              only: master
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
