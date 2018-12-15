@@ -3,7 +3,7 @@ version: 2
 jobs:
 
   build:
-    working_directory: /go/src/github.com/FactomProject/ptnet-eventstore
+    working_directory: "/go/src/github.com/FactomProject/ptnet-eventstore"
     docker:
       - image: circleci/golang:1.11
 
@@ -35,7 +35,7 @@ jobs:
             - vendor
 
   test:
-    working_directory: /go/src/github.com/FactomProject/ptnet-eventstore
+    working_directory: "/go/src/github.com/FactomProject/ptnet-eventstore"
     docker:
       - image: circleci/golang:1.11
 
