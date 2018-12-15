@@ -16,24 +16,43 @@ import . "github.com/FactomProject/ptnet-eventstore/identity"
 // will only redeem once
 // tokens should be thought of as "pay-to-script" - locked until state machine is halted
 func OptionContract() Declaration {
-	p := gen.OptionV1
+	d := OptionTemplate()
 
-	return Declaration{ // array of inputs also referenced by guards and conditions
-		Inputs: []AddressAmountMap{ // array of input depositors
-			AddressAmountMap{Address[DEPOSITOR], 1}, // deposit tokens
-		},
-		Outputs: []AddressAmountMap{
-			AddressAmountMap{Address[DEPOSITOR], 1}, // withdraw token
-			AddressAmountMap{Address[USER1], 1},     // deposit to user1
-			AddressAmountMap{Address[USER2], 1},     // deposit to user2
-		},
-		BlockHeight: 60221409,              // deadline for halting state
-		Salt:        "|RANDOM|",            // added random salt
-		ContractID:  "|OptionContractID|",  // unique ID for this contract instance
-		Schema:      ptnet.OptionV1,        // versioned contract schema
-		Capacity:    p.GetCapacityVector(), // state machine initial state
-		State:       p.GetInitialState(),   // state machine initial state
-		Actions:     p.Transitions,         // state machine defined transitions
+	d.Inputs = []AddressAmountMap{ // array of input depositors
+		AddressAmountMap{Address[DEPOSITOR], 1}, // deposit tokens
+	}
+
+	d.Outputs = []AddressAmountMap{
+		AddressAmountMap{Address[DEPOSITOR], 1}, // withdraw token
+		AddressAmountMap{Address[USER1], 1},     // deposit to user1
+		AddressAmountMap{Address[USER2], 1},     // deposit to user2
+	}
+
+	d.BlockHeight = 60221409             // deadline for halting state
+	d.Salt = "|xRANDOMx|"                // added random salt
+
+	/* FIXME should generate new Contract based on inputs
+	d.ContractID = "|OptionContractID|"  // unique ID for this contract instance
+	*/
+
+	return d
+}
+
+// templates are  used to generate the chain digest
+
+// altering this definition will result in a new chain signature
+func OptionTemplate() Declaration {
+	p := gen.OptionV1
+	return Declaration{
+		Inputs: []AddressAmountMap{},
+		Outputs: []AddressAmountMap{},
+		BlockHeight: 0,
+		Salt:        "|RANDOM|",
+		ContractID:  "|OptionContractID|",
+		Schema:      ptnet.OptionV1,
+		Capacity:    p.GetCapacityVector(),
+		State:       p.GetInitialState(),
+		Actions:     p.Transitions,
 		Guards: []Condition{ // guard clause restricts actions
 			Role(p, []string{"OPEN"}, 1),
 			Role(p, []string{"OPEN"}, 1),
@@ -47,19 +66,38 @@ func OptionContract() Declaration {
 	}
 }
 
+// altering this definition will result in a new chain signature
 func TicTacToeContract() Declaration {
+	d := TicTacToeTemplate()
+
+	d.Inputs = []AddressAmountMap{ // array of input depositors
+		AddressAmountMap{Address[DEPOSITOR], 1},
+	}
+
+	d.Outputs = []AddressAmountMap{
+		AddressAmountMap{Address[DEPOSITOR], 1},
+		AddressAmountMap{Address[PLAYERX], 1},
+		AddressAmountMap{Address[PLAYERO], 1},
+	}
+
+	d.BlockHeight = 60221409             // deadline for halting state
+	d.Salt = "|xRANDOMx|"                // added random salt
+
+	/* FIXME should generate new Contract based on inputs
+	data, _ := json.Marshal(d)
+	d.ContractID = string(x.Shad(data))
+	*/
+
+	return d
+}
+
+func TicTacToeTemplate() Declaration {
 	p := gen.OctoeV1
 
 	return Declaration{ // array of inputs/outputs also referenced by guards and conditions
-		Inputs: []AddressAmountMap{ // array of input depositors
-			AddressAmountMap{Address[DEPOSITOR], 1},
-		},
-		Outputs: []AddressAmountMap{ // array of possible redeemers
-			AddressAmountMap{Address[DEPOSITOR], 1},
-			AddressAmountMap{Address[PLAYERX], 1},
-			AddressAmountMap{Address[PLAYERO], 1},
-		},
-		BlockHeight: 60221409,              // deadline for halting state
+		Inputs: []AddressAmountMap{}, // array of input depositors
+		Outputs: []AddressAmountMap{}, // array of possible redeemers
+		BlockHeight: 0,              // deadline for halting state
 		Salt:        "|RANDOM|",            // added random salt
 		ContractID:  "|OctoeContractID|",   // unique ID for this contract instance
 		Schema:      "OctoeV1",             // versioned contract schema

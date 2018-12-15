@@ -20,7 +20,8 @@ var CHAIN_ID string = "|ChainID|"
 
 type Contract struct {
 	Schema  string       `json:"schema"`
-	Machine StateMachine `json:"state_machine""`
+	Machine StateMachine `json:"-"`
+	Template Declaration `json:"template"`
 	db      *memdb.MemDB
 }
 
@@ -66,11 +67,13 @@ var Contracts map[string]Contract = map[string]Contract{
 	ptnet.OptionV1: Contract{
 		Schema:  ptnet.OptionV1,
 		Machine: gen.OptionV1.StateMachine(),
+		Template: OptionTemplate(),
 		db:      ContractStore(),
 	},
 	ptnet.OctoeV1: Contract{
 		Schema:  ptnet.OctoeV1,
 		Machine: gen.OctoeV1.StateMachine(),
+		Template: TicTacToeTemplate(),
 		db:      ContractStore(),
 	},
 }
@@ -310,3 +313,9 @@ func Dual(p PetriNet, placeNames []string, mult int64) []int64 {
 // alias for syntactic sugar
 var Role = Dual
 var Check = Role
+
+func (c Contract) Version() []byte {
+	data, _ := json.Marshal(c.Template)
+	//fmt.Printf("%s", data)
+	return x.Shad(data)
+}

@@ -3,6 +3,7 @@ package x
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/hex"
 	"github.com/FactomProject/ed25519"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/factomd/common/factoid"
@@ -87,4 +88,18 @@ func Encode(s string) []byte {
 	b := bytes.Buffer{}
 	b.WriteString(s)
 	return b.Bytes()
+}
+
+func Decode(b []byte) string {
+	return string(b)
+}
+
+// create the chainid from a series of hashes of the Entries ExtIDs
+func NewChainID(extIDs [][]byte) string {
+	hs := sha256.New()
+	for _, id := range extIDs {
+		h := sha256.Sum256(id)
+		hs.Write(h[:])
+	}
+	return hex.EncodeToString(hs.Sum(nil))
 }

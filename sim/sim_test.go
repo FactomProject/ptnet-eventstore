@@ -2,59 +2,46 @@ package sim_test
 
 import (
 	"fmt"
+	"github.com/FactomProject/ptnet-eventstore/ptnet"
 	"github.com/FactomProject/ptnet-eventstore/sim"
 	"github.com/FactomProject/ptnet-eventstore/x"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 
 func TestSendingCommitAndReveal(t *testing.T) {
-
-	id := "92475004e70f41b94750f4a77bf7b430551113b25d3d57169eadca5692bb043d"
-	extids := [][]byte{x.Encode("foo"), x.Encode("bar")}
-	a := x.AccountFromFctSecret("Fs2zQ3egq2j99j37aYzaCddPq9AF3mgh64uG9gRaDAnrkjRx3eHs")
-	b := x.GetBankAccount()
 	numEntries := 21 // including head entry
 
-	// TODO refactor to use
-	_ = sim.BlockChain{}
+	chain, _ := sim.NewBlockchain("salt", ptnet.OctoeV1, ptnet.OptionV1)
+	b := chain.GetAccount("BANK")
 
 	t.Run("generate accounts", func(t *testing.T) {
 		println(b.String())
-		println(a.String())
 	})
 
 	t.Run("Run sim to create entries", func(t *testing.T) {
 		state0 := sim.Setup(t, 20)
 
-
 		t.Run("Fund EC Address", func(t *testing.T) {
-			x.FundECWallet(state0, b.FctPrivHash(), a.EcAddr(), 444*state0.GetFactoshisPerEC())
-			bal := x.WaitForEcBalance(state0, a.EcPub())
+			x.FundECWallet(state0, b.PrivHash(), b.EcAddr(), 444*state0.GetFactoshisPerEC())
+			bal := x.WaitForEcBalance(state0, b.EcPub())
 			assert.Equal(t, bal, int64(444))
 		})
 
 		t.Run("Create Chain", func(t *testing.T) {
-			e := x.Entry(id, extids, x.Encode("Hello World!"))
-			c := x.NewChain(&e)
-			commit, _ := x.ComposeChainCommit(a.Priv, c)
-			reveal, _ := x.ComposeRevealEntryMsg(a.Priv, c.FirstEntry)
-			sim.Dispatch(commit)
-			sim.Dispatch(reveal)
+			_, err := chain.Deploy(b)
+			assert.Nil(t, err)
 		})
 
 		t.Run("Create Entries", func(t *testing.T) {
-			publish := func(i int) {
-				e := x.Entry(id, extids, x.Encode(fmt.Sprintf("hello@%v", i)))
-				commit, _ := x.ComposeCommitEntryMsg(a.Priv, e)
-				reveal, _ := x.ComposeRevealEntryMsg(a.Priv, &e)
-				sim.Dispatch(commit)
-				sim.Dispatch(reveal)
-			}
-
-			for x := 1; x < numEntries; x++ {
-				publish(x)
+			for i := 1; i < numEntries; i++ {
+				ts := x.Encode(fmt.Sprintf("%v", time.Now().UnixNano()))
+				body :=x.Encode(fmt.Sprintf("hello@%v", i))
+				extids := [][]byte{ts}
+				_, err := chain.Commit(b, extids, body)
+				assert.Nil(t, err)
 			}
 		})
 
@@ -64,18 +51,9 @@ func TestSendingCommitAndReveal(t *testing.T) {
 			x.ShutDownEverything(t)
 		})
 
-		t.Run("Verify Entries", func(t *testing.T) {
-
-			bal := x.GetBalanceEC(state0, a.EcPub())
+		t.Run("Verify EC Balance", func(t *testing.T) {
+			bal := x.GetBalanceEC(state0, b.EcPub())
 			assert.Equal(t, int64(444-numEntries-10), bal, "EC spend mismatch")
-
-			for _, v := range state0.Holding {
-				s, _ := v.JSONString()
-				println(s)
-			}
-
-			// TODO: actually check for confirmed entries
-			assert.Equal(t, 0, len(state0.Holding), "messages stuck in holding")
 		})
 
 	})
