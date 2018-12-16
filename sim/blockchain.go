@@ -7,10 +7,14 @@ import (
 	"fmt"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/ptnet-eventstore/contract"
+	"github.com/FactomProject/ptnet-eventstore/gen"
 	"github.com/FactomProject/ptnet-eventstore/identity"
+	"github.com/FactomProject/ptnet-eventstore/ptnet"
 	"github.com/FactomProject/ptnet-eventstore/x"
 	"text/template"
 )
+
+const Meta string = "Meta"
 
 type Color uint8
 
@@ -105,9 +109,55 @@ func (b *Blockchain) Commit(a *identity.Account, extids [][]byte, content []byte
 	return &e, err
 }
 
-func (b *Blockchain) Publish(declaration contract.Declaration) (*factom.Entry, error) {
-	// Create transaction & then convert to be an entry
-	return nil, nil
+func Ext(extIDs ...string) [][]byte {
+	ext := [][]byte{}
+
+	for _, id := range extIDs {
+		ext = append(ext, x.Encode(id))
+	}
+
+	return ext
+}
+
+
+// definition for deploying the registry chain
+func Metachain() *Blockchain{
+
+	ext := Ext(Meta, ptnet.FiniteV1)
+
+	b := Blockchain{
+		ChainID:   x.NewChainID(ext),
+		ExtIDs:    ext,
+		Tokens:    []Token{ { Color: Default } },
+		Contracts: map[string]contract.Contract{
+				ptnet.FiniteV1: contract.Contract{
+					Schema:   ptnet.FiniteV1,
+					Machine:  gen.FiniteV1.StateMachine(),
+					Template: contract.Declaration{
+						BlockHeight: 0,
+						ContractID:	x.NewChainID(ext),
+						Schema: ptnet.FiniteV1,
+						Capacity: gen.FiniteV1.GetCapacityVector(),
+						State: gen.FiniteV1.GetCapacityVector(),
+						Actions: gen.FiniteV1.Transitions,
+					},
+				},
+		},
+	}
+
+	return &b
+}
+
+func DeployRegistry (a *identity.Account) (*factom.Entry, error) {
+	return Metachain().Deploy(a)
+}
+
+func (b *Blockchain) Publish(a *identity.Account) (*factom.Entry, error) {
+	data , _ := json.Marshal(b)
+	extIDs := b.ExtIDs
+	extIDs = append(extIDs, x.Encode(b.ChainID))
+	extIDs = append(extIDs, b.Digest())
+	return Metachain().Commit(a, extIDs, data)
 }
 
 func (b *Blockchain) Search(q map[string]string) {}

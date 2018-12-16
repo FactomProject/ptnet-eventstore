@@ -8,19 +8,22 @@ import (
 	"testing"
 )
 
-func genStateMachine(path string, varName string, filename string) statemachine.PetriNet {
-	p, _ := statemachine.LoadPnmlFromFile(path)
-	src := statemachine.Generate(p, varName)
-	ioutil.WriteFile(filename, src.Bytes(), 0600)
-	//println(src.String())
-	return p
-}
 
 func TestGenerateStateMachines(t *testing.T) {
+
+	generate := func (path string, varName string, filename string) statemachine.PetriNet {
+		p, _ := statemachine.LoadPnmlFromFile(path)
+		src := statemachine.Generate(p, varName)
+		ioutil.WriteFile(filename, src.Bytes(), 0600)
+		//println(src.String())
+		return p
+	}
+
 	// NOTE: overwrites source files
-	//genStateMachine("../pnml/counter.xml", "CounterV1", "counter.go")
-	//genStateMachine("../pnml/option.xml", "OptionV1", "option.go")
-	genStateMachine("../pnml/octoe.xml", "OctoeV1", "octoe.go")
+	generate("../pnml/counter.xml", "CounterV1", "counter.go")
+	generate("../pnml/option.xml", "OptionV1", "option.go")
+	generate("../pnml/octoe.xml", "OctoeV1", "octoe.go")
+	generate("../pnml/deployment.xml", "FiniteV1", "deployment.go")
 }
 
 func TestUsingGeneratedSource(t *testing.T) {
@@ -30,4 +33,5 @@ func TestUsingGeneratedSource(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, gen.OptionV1)
 	assert.NotNil(t, gen.OctoeV1)
+	assert.NotNil(t, gen.FiniteV1)
 }

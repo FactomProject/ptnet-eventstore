@@ -1,7 +1,6 @@
 package sim_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
 	"github.com/FactomProject/ptnet-eventstore/sim"
@@ -25,9 +24,8 @@ func TestBlockchainApi(t *testing.T) {
 	assert.Equal(t, b.ChainID, "c2487b6e6b7ae49aa813700205735dc40f7a2fef314eb5fcc28d564b217c58f3")
 
 	t.Run("Deploy Chain", func(t *testing.T) {
-		entry, err := b.Deploy(a)
+		entry, _ := b.Deploy(a)
 		assert.Equal(t, entry.ChainID, b.ChainID)
-		assert.NotNil(t, err, "expected error when sim is not running")
 		println(entry.String())
 
 		t.Run("Integrity Check", func(t *testing.T) {
@@ -41,14 +39,23 @@ func TestBlockchainApi(t *testing.T) {
 		ts := x.Encode(fmt.Sprintf("%v", time.Now().Unix()))
 		body :=x.Encode(fmt.Sprintf("hello@%v", time.Now().Unix()))
 		extids := [][]byte{ts}
-		entry, err := b.Commit(a, extids, body)
+		entry, _ := b.Commit(a, extids, body)
 		assert.Equal(t, entry.ChainID, b.ChainID)
-		assert.NotNil(t, err, "expected error when sim is not running")
 	})
 
-	t.Run("Publish Contract", func(t *testing.T) {
-		data, _ := json.Marshal(b)
-		fmt.Printf("%s", data)
+	t.Run("Deploy Registry chain", func(t *testing.T) {
+		println(sim.Metachain().String())
+		entry, _ := sim.DeployRegistry(a)
+		assert.NotNil(t, entry)
+		println(entry.String())
+		entry, _ = sim.Metachain().Publish(a)
+		println(entry.String())
+	})
+
+	t.Run("Publish Schemata", func(t *testing.T) {
+		entry, _ := b.Publish(a)
+		assert.NotNil(t, entry)
+		println(entry.String())
 	})
 
 }
