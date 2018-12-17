@@ -28,6 +28,7 @@ type Contract struct {
 type AddressAmountMap struct {
 	Address []byte `json:"address""`
 	Amount  uint64 `json:"amount""`
+	Token   uint8  `json:"color""`
 }
 
 type Condition Transition
@@ -36,7 +37,6 @@ type Declaration struct {
 	Inputs      []AddressAmountMap    `json:"inputs"`
 	Outputs     []AddressAmountMap    `json:"outputs"`
 	BlockHeight uint64                `json:"blockheight"`
-	Salt        string                `json:"salt"`
 	ContractID  string                `json:"contractid"`
 	Schema      string                `json:"schema"`
 	Capacity    StateVector           `json:"capacity"`
@@ -64,6 +64,12 @@ type Command struct {
 }
 
 var Contracts map[string]Contract = map[string]Contract{
+	ptnet.Meta: Contract{
+		Schema:  ptnet.Meta,
+		Machine: gen.FiniteV1.StateMachine(),
+		Template: RegistryTemplate(),
+		db:      ContractStore(),
+	},
 	ptnet.OptionV1: Contract{
 		Schema:  ptnet.OptionV1,
 		Machine: gen.OptionV1.StateMachine(),
@@ -103,6 +109,7 @@ func create(contract Declaration, chainID string, signfunc func(*ptnet.Event) er
 	//println("contract:")
 	//println(string(payload))
 
+	// FIXME actually use key
 	pubkey := identity.PublicKey{}
 
 	event, err := Transform(
@@ -265,7 +272,6 @@ Inputs: {{ range $_, $input := .Inputs}}
 Outputs: {{ range $_, $output := .Outputs}}
 	Address: {{ printf "%x" $output.Address }} Amount: {{ $output.Amount }} {{ end }}
 BlockHeight: {{ .BlockHeight }}
-Salt: {{ .Salt }}
 ContractID: {{ .ContractID }}
 Schema: {{ .Schema }}
 State: {{ .GetState }}

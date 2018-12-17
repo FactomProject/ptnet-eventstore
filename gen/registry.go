@@ -9,7 +9,7 @@ var FiniteV1 PetriNet = PetriNet{
 		"active": Place{
 				Initial: 1,
 				Offset: 2,
-				Capacity: 0,
+				Capacity: 1,
 		},
 		"edits": Place{
 				Initial: 0,
@@ -19,12 +19,12 @@ var FiniteV1 PetriNet = PetriNet{
 		"inactive": Place{
 				Initial: 0,
 				Offset: 0,
-				Capacity: 0,
+				Capacity: 1,
 		},
 	},
 	Transitions: map[Action]Transition { 
 		"DISABLE": Transition{ 1,0,-1 },
 		"ENABLE": Transition{ -1,0,1 },
-		"UPLOAD": Transition{ 0,1,0 },
+		"EXEC": Transition{ 0,1,0 },
 	},
 }

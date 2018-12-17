@@ -2,21 +2,31 @@ package finite
 
 import (
 	"github.com/FactomProject/ptnet-eventstore/contract"
+	"github.com/FactomProject/ptnet-eventstore/ptnet"
+	"github.com/FactomProject/ptnet-eventstore/x"
 )
 
-/*
- Transaction fixtures (currently for testing) are defined in this file
- eventually these structures will be stored on chain and indexed in memory when in use
-*/
 
 func OptionContract() Offer {
+
 	return Offer{
 		Declaration: contract.OptionContract(),
+		ChainID: x.NewChainID( x.Ext("Merged", ptnet.OctoeV1, ptnet.OptionV1 )),
 	}
 }
 
 func TicTacToeContract() Offer {
+
 	return Offer{
 		Declaration: contract.TicTacToeContract(),
+		ChainID: x.NewChainID( x.Ext("Merged", ptnet.OctoeV1, ptnet.OptionV1 )),
+	}
+}
+
+func Registry() Offer {
+
+	return Offer{
+		Declaration: contract.RegistryTemplate(),
+		ChainID: x.NewChainID(x.Ext(ptnet.Meta, ptnet.FiniteV1)),
 	}
 }

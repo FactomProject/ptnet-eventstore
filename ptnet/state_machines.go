@@ -15,6 +15,7 @@ This may mean that part of this protocol is to publish versioned
 state machines to a distinct revision-control chain on Factom
 */
 
+const Meta string = "Meta" // registry schema
 const OptionV1 string = "OptionV1" // version contract definitions by using schema name
 const OctoeV1 string = "OctoeV1"   // this allows for future mechanism to 'upconvert' v1 -> v2
 const FiniteV1 string = "FiniteV1"   // meta protocol for publishing blockchain definitions

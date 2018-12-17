@@ -23,7 +23,7 @@ func TestGenerateStateMachines(t *testing.T) {
 	generate("../pnml/counter.xml", "CounterV1", "counter.go")
 	generate("../pnml/option.xml", "OptionV1", "option.go")
 	generate("../pnml/octoe.xml", "OctoeV1", "octoe.go")
-	generate("../pnml/deployment.xml", "FiniteV1", "deployment.go")
+	generate("../pnml/registry.xml", "FiniteV1", "registry.go")
 }
 
 func TestUsingGeneratedSource(t *testing.T) {

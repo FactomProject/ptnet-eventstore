@@ -1,5 +1,5 @@
 // Package sim runs the Factomd blockchain simulator to test prototype Factom Asset Token implementations
-package sim
+package blockchain
 
 import (
 	"bytes"
@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/ptnet-eventstore/contract"
+	"github.com/FactomProject/ptnet-eventstore/finite"
 	"github.com/FactomProject/ptnet-eventstore/gen"
 	"github.com/FactomProject/ptnet-eventstore/identity"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
+	"github.com/FactomProject/ptnet-eventstore/sim"
 	"github.com/FactomProject/ptnet-eventstore/x"
 	"text/template"
 )
-
-const Meta string = "Meta"
 
 type Color uint8
 
@@ -26,22 +26,14 @@ type Token struct {
 	Color Color
 }
 
-type Identity struct {
-}
-
-type Account struct {
-	Identity
-}
-
 type Blockchain struct {
 	ChainID string
 	ExtIDs  [][]byte
 	Tokens  []Token
-	Account
 	Contracts map[string]contract.Contract
 }
 
-func NewBlockchain(extids ...string) (*Blockchain, error) {
+func NewBlockchain(extids ...string) *Blockchain {
 	ext := [][]byte{}
 	for _, id := range extids {
 		ext = append(ext, x.Encode(id))
@@ -50,11 +42,11 @@ func NewBlockchain(extids ...string) (*Blockchain, error) {
 	b := Blockchain{
 		ChainID:   x.NewChainID(ext),
 		ExtIDs:    ext,
-		Tokens:    []Token{ { Color: Default } },
+		Tokens:    []Token{{Color: Default}},
 		Contracts: contract.Contracts,
 	}
 
-	return &b, nil
+	return &b
 }
 
 var txtFormat string = `
@@ -97,7 +89,7 @@ func (b *Blockchain) Deploy(a *identity.Account) (*factom.Entry, error) {
 	c := x.NewChain(&e)
 	commit, _ := x.ComposeChainCommit(a.Priv, c)
 	reveal, _ := x.ComposeRevealEntryMsg(a.Priv, c.FirstEntry)
-	err := Dispatch(commit, reveal)
+	err := sim.Dispatch(commit, reveal)
 	return &e, err
 }
 
@@ -105,69 +97,56 @@ func (b *Blockchain) Commit(a *identity.Account, extids [][]byte, content []byte
 	e := x.Entry(b.ChainID, extids, content)
 	commit, _ := x.ComposeCommitEntryMsg(a.Priv, e)
 	reveal, _ := x.ComposeRevealEntryMsg(a.Priv, &e)
-	err := Dispatch(commit, reveal)
+	err := sim.Dispatch(commit, reveal)
 	return &e, err
 }
 
-func Ext(extIDs ...string) [][]byte {
-	ext := [][]byte{}
+func Metachain() *Blockchain {
 
-	for _, id := range extIDs {
-		ext = append(ext, x.Encode(id))
-	}
-
-	return ext
-}
-
-
-// definition for deploying the registry chain
-func Metachain() *Blockchain{
-
-	ext := Ext(Meta, ptnet.FiniteV1)
+	ext := x.Ext(ptnet.Meta, ptnet.FiniteV1)
 
 	b := Blockchain{
-		ChainID:   x.NewChainID(ext),
-		ExtIDs:    ext,
-		Tokens:    []Token{ { Color: Default } },
+		ChainID: x.NewChainID(ext),
+		ExtIDs:  ext,
+		Tokens:  []Token{{Color: Default}},
 		Contracts: map[string]contract.Contract{
-				ptnet.FiniteV1: contract.Contract{
-					Schema:   ptnet.FiniteV1,
-					Machine:  gen.FiniteV1.StateMachine(),
-					Template: contract.Declaration{
-						BlockHeight: 0,
-						ContractID:	x.NewChainID(ext),
-						Schema: ptnet.FiniteV1,
-						Capacity: gen.FiniteV1.GetCapacityVector(),
-						State: gen.FiniteV1.GetCapacityVector(),
-						Actions: gen.FiniteV1.Transitions,
-					},
-				},
+			ptnet.Meta: contract.Contract{
+				Schema:  ptnet.Meta,
+				Machine: gen.FiniteV1.StateMachine(),
+				Template: contract.RegistryTemplate(),
+			},
 		},
 	}
 
 	return &b
 }
 
-func DeployRegistry (a *identity.Account) (*factom.Entry, error) {
+func DeployRegistry(a *identity.Account) (*factom.Entry, error) {
 	return Metachain().Deploy(a)
 }
 
 func (b *Blockchain) Publish(a *identity.Account) (*factom.Entry, error) {
-	data , _ := json.Marshal(b)
 	extIDs := b.ExtIDs
 	extIDs = append(extIDs, x.Encode(b.ChainID))
 	extIDs = append(extIDs, b.Digest())
-	return Metachain().Commit(a, extIDs, data)
+	m := Metachain()
+
+	// FIXME: construct transaction & publish
+	//t := finite.OfferTransaction(finite.Registry(), a.GetPrivateKey())
+	//data, _ := json.Marshal(t)
+	data, _ := json.Marshal(b)
+	return m.Commit(a, extIDs, data)
 }
 
-func (b *Blockchain) Search(q map[string]string) {}
-func (b *Blockchain) Offer() {}
-func (b *Blockchain) Execute() {}
-
-func (b Token) Balance() {}
-func (b Account) List()  {}
-
-func (b Account) GetAccount(name string) *identity.Account {
+func (b Blockchain) GetAccount(name string) *identity.Account {
 	return identity.GetAccount(name)
 }
 
+func Offer(offer finite.Offer, a *identity.Account) finite.Transaction {
+	return finite.OfferTransaction(offer, a.GetPrivateKey())
+}
+
+// REVIEW: add methods for querying memdb + factomd entries
+func (b *Blockchain) Search(q map[string]string) {}
+func (b *Blockchain) Execute() {}
+func (b Token) Balance() {}

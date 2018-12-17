@@ -103,3 +103,16 @@ func NewChainID(extIDs [][]byte) string {
 	}
 	return hex.EncodeToString(hs.Sum(nil))
 }
+
+var NewContractID = NewChainID
+
+func Ext(extIDs ...string) [][]byte {
+	ext := [][]byte{}
+
+	for _, id := range extIDs {
+		ext = append(ext, Encode(id))
+	}
+
+	return ext
+}
+

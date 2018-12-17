@@ -2,6 +2,7 @@ package sim_test
 
 import (
 	"fmt"
+	"github.com/FactomProject/ptnet-eventstore/blockchain"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
 	"github.com/FactomProject/ptnet-eventstore/sim"
 	"github.com/FactomProject/ptnet-eventstore/x"
@@ -14,7 +15,7 @@ import (
 func TestSendingCommitAndReveal(t *testing.T) {
 	numEntries := 21 // including head entry
 
-	chain, _ := sim.NewBlockchain("salt", ptnet.OctoeV1, ptnet.OptionV1)
+	chain := blockchain.NewBlockchain("salt", ptnet.OctoeV1, ptnet.OptionV1)
 	b := chain.GetAccount("BANK")
 
 	t.Run("generate accounts", func(t *testing.T) {

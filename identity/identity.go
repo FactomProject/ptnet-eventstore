@@ -128,6 +128,14 @@ func (d *Account) EcAddr() interfaces.IHash {
 	return x
 }
 
+func (d *Account) GetPrivateKey() PrivateKey {
+	k := PrivateKey{}
+	for i, v := range d.Priv.Key {
+		k[i] = v
+	}
+	return k
+}
+
 func PrivateKeyFromFctSecret(s string) PrivateKey {
 	h, _ := primitives.HumanReadableFactoidPrivateKeyToPrivateKey(s)
 	k := PrivateKey{}

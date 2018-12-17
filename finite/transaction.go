@@ -76,9 +76,9 @@ type offerSource struct {
 	Offer
 }
 
+// FIXME
 var transactionFormat string = `
 Schema: {{.Schema}}
-Action: {{.Action}}
 Action: {{.Action}}
 `
 var transactionTemplate *template.Template = template.Must(
