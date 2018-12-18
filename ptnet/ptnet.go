@@ -94,6 +94,7 @@ func AddSignature(event *Event, publicKey identity.PublicKey, sig []byte) {
 func (event *Event) SignatureValid(address []byte) bool {
 	// TODO: also validate sig against pubkey
 	// or consider doing this validation in the contract layer
+	// FIXME
 	for _, key := range event.pubkeys {
 		if key.MatchesAddress(address) {
 			return true

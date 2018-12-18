@@ -2,6 +2,7 @@ package finite
 
 import (
 	"bytes"
+	"github.com/FactomProject/factom"
 	"github.com/FactomProject/ptnet-eventstore/contract"
 	"github.com/FactomProject/ptnet-eventstore/identity"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
@@ -11,10 +12,6 @@ import (
 type Offer struct {
 	contract.Declaration
 	ChainID string
-}
-
-type Execution struct {
-	contract.Command
 }
 
 type Transaction struct {
@@ -31,8 +28,8 @@ func OfferTransaction(o Offer, privKey identity.PrivateKey) Transaction {
 	return Transaction{Event: event}
 }
 
-func ExecuteTransaction(x Execution, privKey identity.PrivateKey) (Transaction, error) {
-	event, err := contract.Transform(x.Command, func(evt *ptnet.Event) error {
+func ExecuteTransaction(x contract.Command, privKey identity.PrivateKey) (Transaction, error) {
+	event, err := contract.Transform(x, func(evt *ptnet.Event) error {
 		contract.SignEvent(evt, privKey)
 		return nil
 	})
@@ -87,4 +84,9 @@ var transactionTemplate *template.Template = template.Must(
 
 func (transaction Transaction) String() string {
 	return transaction.Event.String()
+}
+
+func (t Transaction) Dispatch() (*factom.Entry, error) {
+	// FIXME convert to entry
+	return nil, nil
 }

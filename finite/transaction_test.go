@@ -1,6 +1,7 @@
 package finite_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/FactomProject/ptnet-eventstore/contract"
 	"github.com/FactomProject/ptnet-eventstore/finite"
@@ -14,44 +15,45 @@ import (
 
 const expectValid bool = false
 const expectError bool = true
-const optionContractID string = "|OptionContractID|"
-
-// make commits and test for expected error outcome
-func commit(t *testing.T, action string, key PrivateKey, expectError bool) (finite.Transaction, error) {
-	pub := PublicKey{}
-	copy(pub[:], x.PrivateKeyToPub(key[:]))
-	txn, err := finite.ExecuteTransaction(finite.Execution{
-		Command: contract.Command{
-			ChainID:    contract.CHAIN_ID, // test values
-			ContractID: optionContractID,
-			Schema:     ptnet.OptionV1, // state machine version
-			Action:     action,         // state machine action
-			Mult:       1,              // triggers input action 'n' times
-			Payload:    nil,            // arbitrary data optionally included
-			Pubkey:     pub,
-		},
-	}, key)
-
-	println(txn.String())
-	var msg string
-	if expectError {
-		msg = fmt.Sprintf("expected action %v to return an error ", action)
-	} else {
-		msg = fmt.Sprintf("unexpected error %v from action %v", err, action)
-	}
-	assert.Equal(t, expectError, err != nil, msg)
-	return txn, err
-}
 
 func TestTransactionSequence(t *testing.T) {
 	offer := finite.OptionContract()
-	offer.ChainID = contract.CHAIN_ID
+
+	// make commits and test for expected error outcome
+	commit := func(action string, key PrivateKey, expectError bool) (finite.Transaction, error) {
+		pub := PublicKey{}
+		copy(pub[:], x.PrivateKeyToPub(key[:]))
+		txn, err := finite.ExecuteTransaction(
+			contract.Command{
+				ChainID:    offer.ChainID,
+				ContractID: offer.ContractID,
+				Schema:     ptnet.OptionV1,
+				Action:     action,         // state machine action
+				Mult:       1,              // triggers input action 'n' times
+				Payload:    nil,            // arbitrary data optionally included
+				Pubkey:     pub,
+			}, key)
+
+		d, _ := json.Marshal(txn)
+		println(txn.String())
+		//txn.GetDigest()
+		fmt.Printf("%s", d)
+
+		var msg string
+		if expectError {
+			msg = fmt.Sprintf("expected action %v to return an error ", action)
+		} else {
+			msg = fmt.Sprintf("unexpected error %v from action %v", err, action)
+		}
+		assert.Equal(t, expectError, err != nil, msg)
+		return txn, err
+	}
 
 	//println(offer.String())
 	t.Run("publish offer", func(t *testing.T) {
 		txn := finite.OfferTransaction(offer, Private[DEPOSITOR])
-		assert.Equal(t, true, contract.Exists(offer.Schema, optionContractID), "missing declaration")
-		assert.Equal(t, txn.Oid, optionContractID)
+		assert.Equal(t, true, contract.Exists(offer.Schema, offer.ContractID), "missing declaration")
+		assert.Equal(t, txn.Oid, offer.ContractID)
 		assert.Equal(t, txn.Action, ptnet.BEGIN, "")
 		assert.Equal(t, txn.InputState, StateVector{1, 0, 0, 0, 0})
 		assert.Equal(t, txn.OutputState, StateVector{0, 1, 0, 0, 0})
@@ -59,9 +61,9 @@ func TestTransactionSequence(t *testing.T) {
 	})
 
 	t.Run("execute transactions to accept offer", func(t *testing.T) {
-		commit(t, "OPT_1", Private[USER1], expectValid)
-		commit(t, "OPT_2", Private[DEPOSITOR], expectError) // only first executed option is valid
-		commit(t, "HALT", Private[DEPOSITOR], expectError)
+		commit("OPT_1", Private[USER1], expectValid)
+		commit("OPT_2", Private[DEPOSITOR], expectError) // only first executed option is valid
+		commit("HALT", Private[DEPOSITOR], expectError)
 	})
 
 	t.Run("redeem completed contract", func(t *testing.T) {

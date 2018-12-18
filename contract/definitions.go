@@ -31,10 +31,6 @@ func OptionContract() Declaration {
 
 	d.BlockHeight = 60221409             // deadline for halting state
 
-	/* FIXME should generate new Contract based on inputs
-	d.ContractID = "|OptionContractID|"  // unique ID for this contract instance
-	*/
-
 	return d
 }
 
@@ -44,10 +40,12 @@ func OptionContract() Declaration {
 func OptionTemplate() Declaration {
 	p := gen.OptionV1
 	return Declaration{
-		Inputs: []AddressAmountMap{},
-		Outputs: []AddressAmountMap{},
-		BlockHeight: 0, // deadline for halting state 0 = never
-		ContractID:  "|OptionContractID|",
+		Variables: Variables{
+			Inputs: []AddressAmountMap{},
+			Outputs: []AddressAmountMap{},
+			BlockHeight: 0, // deadline for halting state 0 = never
+			ContractID:  x.NewContractID(x.Ext(ptnet.OptionV1)),  // FIXME add salt
+		},
 		Schema:      ptnet.OptionV1,
 		Capacity:    p.GetCapacityVector(),
 		State:       p.GetInitialState(),
@@ -88,10 +86,13 @@ func TicTacToeContract() Declaration {
 func TicTacToeTemplate() Declaration {
 
 	return Declaration{ // array of inputs/outputs also referenced by guards and conditions
-		Inputs: []AddressAmountMap{}, // array of input depositors
-		Outputs: []AddressAmountMap{}, // array of possible redeemers
-		BlockHeight: 0, // deadline for halting state 0 = never
-		ContractID:  x.NewContractID(x.Ext(ptnet.OctoeV1)), // unique ID for this contract instance
+		Variables: Variables{
+			Inputs: []AddressAmountMap{}, // array of input depositors
+			Outputs: []AddressAmountMap{}, // array of possible redeemers
+			BlockHeight: 0, // deadline for halting state 0 = never
+			ContractID:  x.NewContractID(x.Ext(ptnet.OctoeV1)), // FIXME add salt
+
+		},
 		Schema:      ptnet.OctoeV1,             // versioned contract schema
 		Capacity:    gen.OctoeV1.GetCapacityVector(), // capacity for each place
 		State:       gen.OctoeV1.GetInitialState(),   // initial state
@@ -112,10 +113,12 @@ func TicTacToeTemplate() Declaration {
 func RegistryTemplate() Declaration {
 
 	return Declaration{ // array of inputs/outputs also referenced by guards and conditions
-		Inputs:      nil,
-		Outputs:     nil,
-		BlockHeight: 0, // deadline for halting state 0 = never
-		ContractID:	 x.NewContractID(x.Ext(ptnet.Meta)),
+		Variables: Variables{
+			Inputs:      nil,
+			Outputs:     nil,
+			BlockHeight: 0, // deadline for halting state 0 = never
+			ContractID:	 x.NewContractID(x.Ext(ptnet.Meta)),
+		},
 		Schema:      ptnet.FiniteV1,
 		Capacity:    gen.FiniteV1.GetCapacityVector(),
 		State:       gen.FiniteV1.GetInitialState(),

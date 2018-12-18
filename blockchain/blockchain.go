@@ -4,11 +4,11 @@ package blockchain
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/FactomProject/factom"
 	"github.com/FactomProject/ptnet-eventstore/contract"
 	"github.com/FactomProject/ptnet-eventstore/finite"
-	"github.com/FactomProject/ptnet-eventstore/gen"
 	"github.com/FactomProject/ptnet-eventstore/identity"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
 	"github.com/FactomProject/ptnet-eventstore/sim"
@@ -27,9 +27,9 @@ type Token struct {
 }
 
 type Blockchain struct {
-	ChainID string
-	ExtIDs  [][]byte
-	Tokens  []Token
+	ChainID   string
+	ExtIDs    [][]byte
+	Tokens    []Token
 	Contracts map[string]contract.Contract
 }
 
@@ -84,6 +84,7 @@ func (b *Blockchain) Digest() []byte {
 	return x.Encode(fmt.Sprintf("%x", x.Shad(data)))
 }
 
+// use blockchain spec to create new factom chain
 func (b *Blockchain) Deploy(a *identity.Account) (*factom.Entry, error) {
 	e := x.Entry(b.ChainID, b.ExtIDs, b.Digest())
 	c := x.NewChain(&e)
@@ -93,6 +94,7 @@ func (b *Blockchain) Deploy(a *identity.Account) (*factom.Entry, error) {
 	return &e, err
 }
 
+// create a new entry on factom
 func (b *Blockchain) Commit(a *identity.Account, extids [][]byte, content []byte) (*factom.Entry, error) {
 	e := x.Entry(b.ChainID, extids, content)
 	commit, _ := x.ComposeCommitEntryMsg(a.Priv, e)
@@ -101,52 +103,89 @@ func (b *Blockchain) Commit(a *identity.Account, extids [][]byte, content []byte
 	return &e, err
 }
 
+// blockchain def used to publish blockchain defs
 func Metachain() *Blockchain {
-
 	ext := x.Ext(ptnet.Meta, ptnet.FiniteV1)
-
 	b := Blockchain{
 		ChainID: x.NewChainID(ext),
 		ExtIDs:  ext,
 		Tokens:  []Token{{Color: Default}},
 		Contracts: map[string]contract.Contract{
-			ptnet.Meta: contract.Contract{
-				Schema:  ptnet.Meta,
-				Machine: gen.FiniteV1.StateMachine(),
-				Template: contract.RegistryTemplate(),
-			},
+			ptnet.FiniteV1: contract.Contracts[ptnet.FiniteV1],
 		},
 	}
 
 	return &b
 }
 
+// create registry chain
 func DeployRegistry(a *identity.Account) (*factom.Entry, error) {
 	return Metachain().Deploy(a)
 }
 
+// publish blockchain definition to factom 'metachain' registry
 func (b *Blockchain) Publish(a *identity.Account) (*factom.Entry, error) {
-	extIDs := b.ExtIDs
-	extIDs = append(extIDs, x.Encode(b.ChainID))
-	extIDs = append(extIDs, b.Digest())
-	m := Metachain()
+	offer := finite.Registry()
+	offer.ContractID = b.ChainID
 
-	// FIXME: construct transaction & publish
-	//t := finite.OfferTransaction(finite.Registry(), a.GetPrivateKey())
-	//data, _ := json.Marshal(t)
 	data, _ := json.Marshal(b)
-	return m.Commit(a, extIDs, data)
+
+	t := finite.OfferTransaction(offer, a.GetPrivateKey())
+	t.Payload = data
+	t.AddDigest()
+
+	in, _ := json.Marshal(t.InputState)
+	out, _ := json.Marshal(t.OutputState)
+
+	extids := x.Ext(t.Schema, t.Action, t.Oid, fmt.Sprintf("%v", t.Mult))
+	extids = append(extids, in)
+	extids = append(extids, out)
+
+	return Metachain().Commit(a, extids, t.Payload)
 }
 
 func (b Blockchain) GetAccount(name string) *identity.Account {
 	return identity.GetAccount(name)
 }
 
-func Offer(offer finite.Offer, a *identity.Account) finite.Transaction {
-	return finite.OfferTransaction(offer, a.GetPrivateKey())
+func (b *Blockchain) Offer(offer finite.Offer, a *identity.Account) (*factom.Entry, error) {
+	t := finite.OfferTransaction(offer, a.GetPrivateKey())
+	extids := x.Ext(t.Schema, t.Action, t.Oid, fmt.Sprintf("%v", t.Mult))
+
+	in, _ := json.Marshal(t.InputState)
+	extids = append(extids, in)
+
+	out, _ := json.Marshal(t.OutputState)
+	extids = append(extids, out)
+
+	t.Payload, _ = json.Marshal(offer.Variables)
+
+	return b.Commit(a, extids, t.Payload)
 }
 
-// REVIEW: add methods for querying memdb + factomd entries
-func (b *Blockchain) Search(q map[string]string) {}
-func (b *Blockchain) Execute() {}
-func (b Token) Balance() {}
+func (b *Blockchain) Execute(cmd contract.Command, a *identity.Account) (*factom.Entry, error) {
+	_, ok := b.Contracts[cmd.Schema]
+
+	if !ok {
+		msg := fmt.Sprintf("Undefined Contract: %v", cmd.Schema)
+		return new(factom.Entry), errors.New(msg)
+	}
+
+	t, err := finite.ExecuteTransaction(cmd, a.GetPrivateKey())
+	if err != nil {
+		return new(factom.Entry), err
+	}
+
+	// FIXME do we need additional permission validation on t?
+	// check signatures?
+
+	extids := x.Ext(cmd.Schema, cmd.Action, cmd.ContractID, fmt.Sprintf("%v", cmd.Mult))
+
+	in, _ := json.Marshal(t.InputState)
+	extids = append(extids, in)
+
+	out, _ := json.Marshal(t.OutputState)
+	extids = append(extids, out)
+
+	return b.Commit(a, extids, t.Payload)
+}

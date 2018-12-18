@@ -15,9 +15,6 @@ import (
 	"text/template"
 )
 
-// KLUDGE mock values used for testing
-var CHAIN_ID string = "|ChainID|"
-
 type Contract struct {
 	Schema  string       `json:"schema"`
 	Machine StateMachine `json:"-"`
@@ -33,11 +30,15 @@ type AddressAmountMap struct {
 
 type Condition Transition
 
-type Declaration struct {
+type Variables struct {
 	Inputs      []AddressAmountMap    `json:"inputs"`
 	Outputs     []AddressAmountMap    `json:"outputs"`
 	BlockHeight uint64                `json:"blockheight"`
 	ContractID  string                `json:"contractid"`
+}
+
+type Declaration struct {
+	Variables
 	Schema      string                `json:"schema"`
 	Capacity    StateVector           `json:"capacity"`
 	State       StateVector           `json:"state"`
@@ -64,8 +65,8 @@ type Command struct {
 }
 
 var Contracts map[string]Contract = map[string]Contract{
-	ptnet.Meta: Contract{
-		Schema:  ptnet.Meta,
+	ptnet.FiniteV1: Contract{
+		Schema:  ptnet.FiniteV1,
 		Machine: gen.FiniteV1.StateMachine(),
 		Template: RegistryTemplate(),
 		db:      ContractStore(),
@@ -109,7 +110,7 @@ func create(contract Declaration, chainID string, signfunc func(*ptnet.Event) er
 	//println("contract:")
 	//println(string(payload))
 
-	// FIXME actually use key
+	// FIXME convert private to pub
 	pubkey := identity.PublicKey{}
 
 	event, err := Transform(
@@ -117,17 +118,22 @@ func create(contract Declaration, chainID string, signfunc func(*ptnet.Event) er
 			ChainID:    chainID, // test values
 			ContractID: contract.ContractID,
 			Schema:     contract.Schema,
-			Action:     ptnet.BEGIN,     // state machine action
-			Mult:       1,               // triggers input action 'n' times
-			Payload:    []byte(payload), // arbitrary data optionally included
-			Pubkey:     pubkey,          // REVIEW: will there always be a single input?
+			Action:     ptnet.BEGIN, // state machine action
+			Mult:       1, // triggers input action 'n' times
+			Payload:    payload, // arbitrary data optionally included
+			Pubkey:     pubkey, // REVIEW: will there always be a single input?
 		}, signfunc)
 
 	if err != nil {
 		panic(err)
 	}
 
-	txn := Contracts[contract.Schema].db.Txn(true)
+	c, ok := Contracts[contract.Schema]
+	if !ok {
+		panic(fmt.Sprintf("Unknown Schema %v\n", contract.Schema))
+	}
+
+	txn := c.db.Txn(true)
 	err = txn.Insert(ContractTable, contract)
 	if err != nil {
 		panic(err)
@@ -186,7 +192,7 @@ func Commit(cmd Command, privKey identity.PrivateKey) (*ptnet.Event, error) {
 	})
 }
 
-func compress(data []byte) []byte {
+func Compress(data []byte) []byte {
 	if len(data) == 0 {
 		return data
 	}
@@ -203,7 +209,7 @@ func compress(data []byte) []byte {
 
 // commit event sign with callback
 func Transform(cmd Command, signfunc func(*ptnet.Event) error) (*ptnet.Event, error) {
-	return ptnet.Transform(cmd.Schema, cmd.ContractID, cmd.Action, cmd.Mult, compress(cmd.Payload), func(evt *ptnet.Event) error {
+	return ptnet.Transform(cmd.Schema, cmd.ContractID, cmd.Action, cmd.Mult, cmd.Payload, func(evt *ptnet.Event) error {
 		if nil != signfunc(evt) {
 			panic("failed to sign event")
 		}
