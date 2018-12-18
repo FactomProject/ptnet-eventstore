@@ -88,15 +88,17 @@ func (b *Blockchain) Digest() []byte {
 func (b *Blockchain) Deploy(a *identity.Account) (*factom.Entry, error) {
 	e := x.Entry(b.ChainID, b.ExtIDs, b.Digest())
 	c := x.NewChain(&e)
+	AppendSignature(&e, a)
 	commit, _ := x.ComposeChainCommit(a.Priv, c)
 	reveal, _ := x.ComposeRevealEntryMsg(a.Priv, c.FirstEntry)
 	err := sim.Dispatch(commit, reveal)
 	return &e, err
 }
 
-// create a new entry on factom
+// create a new signed entry on factom
 func (b *Blockchain) Commit(a *identity.Account, extids [][]byte, content []byte) (*factom.Entry, error) {
 	e := x.Entry(b.ChainID, extids, content)
+	AppendSignature(&e, a)
 	commit, _ := x.ComposeCommitEntryMsg(a.Priv, e)
 	reveal, _ := x.ComposeRevealEntryMsg(a.Priv, &e)
 	err := sim.Dispatch(commit, reveal)
@@ -105,7 +107,7 @@ func (b *Blockchain) Commit(a *identity.Account, extids [][]byte, content []byte
 
 // blockchain def used to publish blockchain defs
 func Metachain() *Blockchain {
-	ext := x.Ext(ptnet.Meta, ptnet.FiniteV1)
+	ext := x.Ext(ptnet.FiniteV1, ptnet.Meta)
 	b := Blockchain{
 		ChainID: x.NewChainID(ext),
 		ExtIDs:  ext,
@@ -188,4 +190,32 @@ func (b *Blockchain) Execute(cmd contract.Command, a *identity.Account) (*factom
 	extids = append(extids, out)
 
 	return b.Commit(a, extids, t.Payload)
+}
+
+// add signature to extIDs
+func AppendSignature(e *factom.Entry, a *identity.Account) {
+	s := a.Priv.Sign(e.Hash())
+	key := a.Priv.Pub[:]
+	keyString := x.EncodeToString(key)
+
+	sig := x.Encode(fmt.Sprintf("%x", s.Bytes()))
+	e.ExtIDs = append(e.ExtIDs, x.Encode(keyString))
+	e.ExtIDs = append(e.ExtIDs, sig)
+
+}
+
+// validate appended signatures
+func ValidSignature(entry *factom.Entry)  bool {
+	l := len(entry.ExtIDs)
+	key := entry.ExtIDs[l-2]
+	signature := entry.ExtIDs[l-1]
+	e := factom.Entry{ entry.ChainID, entry.ExtIDs[:l-2], entry.Content }
+
+	pub := new([32]byte)
+	x.HexDecode(pub[:], key)
+
+	sig := new([64]byte)
+	x.HexDecode(sig[:], signature)
+
+	return x.VerifyCanonical(pub, e.Hash(), sig)
 }

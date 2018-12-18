@@ -31,10 +31,10 @@ type AddressAmountMap struct {
 type Condition Transition
 
 type Variables struct {
+	ContractID  string                `json:"contractid"`
+	BlockHeight uint64                `json:"blockheight"`
 	Inputs      []AddressAmountMap    `json:"inputs"`
 	Outputs     []AddressAmountMap    `json:"outputs"`
-	BlockHeight uint64                `json:"blockheight"`
-	ContractID  string                `json:"contractid"`
 }
 
 type Declaration struct {
@@ -331,3 +331,14 @@ func (c Contract) Version() []byte {
 	//fmt.Printf("%s", data)
 	return x.Shad(data)
 }
+
+
+/*
+func (v Variables) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		ID       string  `json:"id"`
+	}{
+		ID:       v.ContractID,
+	})
+}
+*/

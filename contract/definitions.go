@@ -1,6 +1,7 @@
 package contract
 
 import (
+	"encoding/json"
 	"github.com/FactomProject/ptnet-eventstore/gen"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
 	"github.com/FactomProject/ptnet-eventstore/x"
@@ -31,6 +32,10 @@ func OptionContract() Declaration {
 
 	d.BlockHeight = 60221409             // deadline for halting state
 
+	sig, _ := json.Marshal(d.Variables)
+	extids := append(x.Ext(ptnet.OptionV1), sig)
+    d.ContractID = x.NewContractID(extids)
+
 	return d
 }
 
@@ -38,27 +43,26 @@ func OptionContract() Declaration {
 
 // altering this definition will result in a new chain signature
 func OptionTemplate() Declaration {
-	p := gen.OptionV1
 	return Declaration{
 		Variables: Variables{
+			ContractID:  x.NewContractID(x.Ext(ptnet.OptionV1, "|SALT|")),
+			BlockHeight: 0, // deadline for halting state 0 = never
 			Inputs: []AddressAmountMap{},
 			Outputs: []AddressAmountMap{},
-			BlockHeight: 0, // deadline for halting state 0 = never
-			ContractID:  x.NewContractID(x.Ext(ptnet.OptionV1)),  // FIXME add salt
 		},
 		Schema:      ptnet.OptionV1,
-		Capacity:    p.GetCapacityVector(),
-		State:       p.GetInitialState(),
-		Actions:     p.Transitions,
+		Capacity:    gen.OptionV1.GetCapacityVector(),
+		State:       gen.OptionV1.GetInitialState(),
+		Actions:     gen.OptionV1.Transitions,
 		Guards: []Condition{ // guard clause restricts actions
-			Role(p, []string{"OPEN"}, 1),
-			Role(p, []string{"OPEN"}, 1),
-			Role(p, []string{"OPEN"}, 1),
+			Role(gen.OptionV1, []string{"OPEN"}, 1),
+			Role(gen.OptionV1, []string{"OPEN"}, 1),
+			Role(gen.OptionV1, []string{"OPEN"}, 1),
 		},
 		Conditions: []Condition{ // contract conditions specify additional redeem conditions
-			Check(p, []string{"REFUND"}, 1),
-			Check(p, []string{"OUT1"}, 1),
-			Check(p, []string{"OUT2"}, 1),
+			Check(gen.OptionV1, []string{"REFUND"}, 1),
+			Check(gen.OptionV1, []string{"OUT1"}, 1),
+			Check(gen.OptionV1, []string{"OUT2"}, 1),
 		},
 	}
 }
@@ -87,10 +91,10 @@ func TicTacToeTemplate() Declaration {
 
 	return Declaration{ // array of inputs/outputs also referenced by guards and conditions
 		Variables: Variables{
+			ContractID:  x.NewContractID(x.Ext(ptnet.OctoeV1)), // FIXME add salt
+			BlockHeight: 0, // deadline for halting state 0 = never
 			Inputs: []AddressAmountMap{}, // array of input depositors
 			Outputs: []AddressAmountMap{}, // array of possible redeemers
-			BlockHeight: 0, // deadline for halting state 0 = never
-			ContractID:  x.NewContractID(x.Ext(ptnet.OctoeV1)), // FIXME add salt
 
 		},
 		Schema:      ptnet.OctoeV1,             // versioned contract schema
@@ -114,10 +118,10 @@ func RegistryTemplate() Declaration {
 
 	return Declaration{ // array of inputs/outputs also referenced by guards and conditions
 		Variables: Variables{
+			ContractID:	 x.NewContractID(x.Ext(ptnet.Meta)),
+			BlockHeight: 0, // deadline for halting state 0 = never
 			Inputs:      nil,
 			Outputs:     nil,
-			BlockHeight: 0, // deadline for halting state 0 = never
-			ContractID:	 x.NewContractID(x.Ext(ptnet.Meta)),
 		},
 		Schema:      ptnet.FiniteV1,
 		Capacity:    gen.FiniteV1.GetCapacityVector(),

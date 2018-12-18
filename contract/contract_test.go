@@ -1,6 +1,7 @@
 package contract_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/FactomProject/ptnet-eventstore/contract"
 	"github.com/FactomProject/ptnet-eventstore/finite"
@@ -15,6 +16,16 @@ import (
 const expectValid bool = false
 const expectError bool = true
 
+func TestVariableMarshalling(t *testing.T) {
+	in := finite.OptionContract().Variables
+	data, _ := json.Marshal(in)
+	out := new(contract.Variables)
+	err := json.Unmarshal(data, out)
+	assert.Nil(t, err)
+	assert.Equal(t, in.ContractID, out.ContractID)
+	assert.Equal(t, in.Inputs[0], out.Inputs[0])
+	assert.Equal(t, in.BlockHeight, out.BlockHeight)
+}
 
 func TestTransactionSequence(t *testing.T) {
 	c := finite.TicTacToeContract()

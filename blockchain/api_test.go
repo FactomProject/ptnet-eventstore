@@ -1,4 +1,4 @@
-package sim_test
+package blockchain_test
 
 import (
 	"fmt"
@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 )
-
 
 func TestBlockchainApi(t *testing.T) {
 	b := blockchain.NewBlockchain("Merged", ptnet.OctoeV1, ptnet.OptionV1)
@@ -53,18 +52,23 @@ func TestBlockchainApi(t *testing.T) {
 
 	t.Run("Add Entry", func(t *testing.T) {
 		ts := x.Encode(fmt.Sprintf("%v", time.Now().Unix()))
-		body :=x.Encode(fmt.Sprintf("hello@%v", time.Now().Unix()))
+		body := x.Encode(fmt.Sprintf("hello@%v", time.Now().Unix()))
 		extids := [][]byte{ts}
 		entry, _ := b.Commit(a, extids, body)
 		assert.Equal(t, entry.ChainID, b.ChainID)
+		assert.True(t, blockchain.ValidSignature(entry))
+		println(entry.String())
 	})
 
 	t.Run("Add Offer", func(t *testing.T) {
-		entry, _ := b.Offer(finite.OptionContract(), a)
+
+		declaration := finite.OptionContract()
+
+		entry, _ := b.Offer(declaration, a)
+		assert.True(t, blockchain.ValidSignature(entry))
 		println(entry.String())
 
 		t.Run("Execute Command", func(t *testing.T) {
-			c := b.Contracts[ptnet.OptionV1]
 
 			// make commits and test for expected error outcome
 			commit := func(action string, a *identity.Account) (*factom.Entry, error) {
@@ -74,23 +78,23 @@ func TestBlockchainApi(t *testing.T) {
 
 				cmd := contract.Command{
 					ChainID:    b.ChainID,
-					ContractID: c.Template.ContractID,
+					ContractID: declaration.ContractID,
 					Schema:     ptnet.OptionV1,
-					Action:     action,         // state machine action
-					Mult:       1,              // triggers input action 'n' times
-					Payload:    nil,            // arbitrary data optionally included
+					Action:     action, // state machine action
+					Mult:       1,      // triggers input action 'n' times
+					Payload:    nil,    // arbitrary data optionally included
 					Pubkey:     pub,
 				}
 
-				return b.Execute(cmd, u1)
+				e, err := b.Execute(cmd, u1)
+				assert.True(t, blockchain.ValidSignature(e))
+				return e, err
 			}
 
 			e, _ := commit("OPT_1", u1)
 			assert.False(t, "" == e.ChainID)
-			println(e.String())
 
 		})
 	})
-
 
 }

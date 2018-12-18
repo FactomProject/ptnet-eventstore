@@ -94,6 +94,8 @@ func Decode(b []byte) string {
 	return string(b)
 }
 
+var HexDecode = hex.Decode
+
 // create the chainid from a series of hashes of the Entries ExtIDs
 func NewChainID(extIDs [][]byte) string {
 	hs := sha256.New()
@@ -103,6 +105,9 @@ func NewChainID(extIDs [][]byte) string {
 	}
 	return hex.EncodeToString(hs.Sum(nil))
 }
+
+var EncodeToString = hex.EncodeToString
+var DecodeString = hex.DecodeString
 
 var NewContractID = NewChainID
 
