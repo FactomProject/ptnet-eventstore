@@ -26,24 +26,24 @@ func TestBlockchainApi(t *testing.T) {
 	//assert.Equal(t, b.ChainID, "c2487b6e6b7ae49aa813700205735dc40f7a2fef314eb5fcc28d564b217c58f3")
 
 	t.Run("Deploy Registry chain", func(t *testing.T) {
-		println(blockchain.Metachain().String())
+		//println(blockchain.Metachain().String())
 		entry, _ := blockchain.DeployRegistry(a)
 		assert.NotNil(t, entry)
-		println(entry.String())
+		//println(entry.String())
 		entry, _ = blockchain.Metachain().Publish(a)
-		println(entry.String())
+		//println(entry.String())
 	})
 
 	t.Run("Publish Schemata", func(t *testing.T) {
 		entry, _ := b.Publish(a)
 		assert.NotNil(t, entry)
-		println(entry.String())
+		//println(entry.String())
 	})
 
 	t.Run("Deploy Chain", func(t *testing.T) {
 		entry, _ := b.Deploy(a)
 		assert.Equal(t, entry.ChainID, b.ChainID)
-		println(entry.String())
+		//println(entry.String())
 
 		t.Run("Integrity Check", func(t *testing.T) {
 			assert.Equal(t, x.Decode(entry.Content), x.Decode(b.Digest()))
@@ -57,7 +57,7 @@ func TestBlockchainApi(t *testing.T) {
 		entry, _ := b.Commit(a, extids, body)
 		assert.Equal(t, entry.ChainID, b.ChainID)
 		assert.True(t, blockchain.ValidSignature(entry))
-		println(entry.String())
+		//println(entry.String())
 	})
 
 	t.Run("Add Offer", func(t *testing.T) {
@@ -66,7 +66,9 @@ func TestBlockchainApi(t *testing.T) {
 
 		entry, _ := b.Offer(declaration, a)
 		assert.True(t, blockchain.ValidSignature(entry))
-		println(entry.String())
+		assert.True(t, blockchain.ValidContract(entry))
+
+		//println(entry.String())
 
 		t.Run("Execute Command", func(t *testing.T) {
 

@@ -178,9 +178,6 @@ func (b *Blockchain) Execute(cmd contract.Command, a *identity.Account) (*factom
 		return new(factom.Entry), err
 	}
 
-	// FIXME do we need additional permission validation on t?
-	// check signatures?
-
 	extids := x.Ext(cmd.Schema, cmd.Action, cmd.ContractID, fmt.Sprintf("%v", cmd.Mult))
 
 	in, _ := json.Marshal(t.InputState)
@@ -218,4 +215,23 @@ func ValidSignature(entry *factom.Entry)  bool {
 	x.HexDecode(sig[:], signature)
 
 	return x.VerifyCanonical(pub, e.Hash(), sig)
+}
+
+func ValidContract(entry *factom.Entry)  bool {
+	if ! ValidSignature(entry) {
+		return false
+	}
+
+	v := new(contract.Variables)
+	err := json.Unmarshal(entry.Content, v)
+
+	if err != nil {
+		return false
+	}
+	if v.ContractID == "" {
+		return false
+	}
+
+	_, ok := contract.Contracts[x.Decode(entry.ExtIDs[0])]
+	return ok
 }
