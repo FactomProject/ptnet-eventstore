@@ -15,7 +15,7 @@ import (
 )
 
 // Reserved Actions
-const BEGIN string = "EXEC"
+const EXEC string = "EXEC"
 
 type State struct {
 	Oid       string      `json:"oid"`

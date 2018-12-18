@@ -16,10 +16,10 @@ import (
 )
 
 type Contract struct {
-	Schema  string       `json:"schema"`
-	Machine StateMachine `json:"-"`
-	Template Declaration `json:"template"`
-	db      *memdb.MemDB
+	Schema   string       `json:"schema"`
+	Machine  StateMachine `json:"-"`
+	Template Declaration  `json:"template"`
+	db       *memdb.MemDB
 }
 
 type AddressAmountMap struct {
@@ -31,20 +31,20 @@ type AddressAmountMap struct {
 type Condition Transition
 
 type Variables struct {
-	ContractID  string                `json:"contractid"`
-	BlockHeight uint64                `json:"blockheight"`
-	Inputs      []AddressAmountMap    `json:"inputs"`
-	Outputs     []AddressAmountMap    `json:"outputs"`
+	ContractID  string             `json:"contractid"`
+	BlockHeight uint64             `json:"blockheight"`
+	Inputs      []AddressAmountMap `json:"inputs"`
+	Outputs     []AddressAmountMap `json:"outputs"`
 }
 
 type Declaration struct {
 	Variables
-	Schema      string                `json:"schema"`
-	Capacity    StateVector           `json:"capacity"`
-	State       StateVector           `json:"state"`
-	Actions     map[Action]Transition `json:"actions"`
-	Guards      []Condition           `json:"guards"`     // enforces contract roles
-	Conditions  []Condition           `json:"conditions"` // enforce redeem conditions
+	Schema     string                `json:"schema"`
+	Capacity   StateVector           `json:"capacity"`
+	State      StateVector           `json:"state"`
+	Actions    map[Action]Transition `json:"actions"`
+	Guards     []Condition           `json:"guards"`     // enforces contract roles
+	Conditions []Condition           `json:"conditions"` // enforce redeem conditions
 }
 
 type State struct {
@@ -66,22 +66,22 @@ type Command struct {
 
 var Contracts map[string]Contract = map[string]Contract{
 	ptnet.FiniteV1: Contract{
-		Schema:  ptnet.FiniteV1,
-		Machine: gen.FiniteV1.StateMachine(),
+		Schema:   ptnet.FiniteV1,
+		Machine:  gen.FiniteV1.StateMachine(),
 		Template: RegistryTemplate(),
-		db:      ContractStore(),
+		db:       ContractStore(),
 	},
 	ptnet.OptionV1: Contract{
-		Schema:  ptnet.OptionV1,
-		Machine: gen.OptionV1.StateMachine(),
+		Schema:   ptnet.OptionV1,
+		Machine:  gen.OptionV1.StateMachine(),
 		Template: OptionTemplate(),
-		db:      ContractStore(),
+		db:       ContractStore(),
 	},
 	ptnet.OctoeV1: Contract{
-		Schema:  ptnet.OctoeV1,
-		Machine: gen.OctoeV1.StateMachine(),
+		Schema:   ptnet.OctoeV1,
+		Machine:  gen.OctoeV1.StateMachine(),
 		Template: TicTacToeTemplate(),
-		db:      ContractStore(),
+		db:       ContractStore(),
 	},
 }
 
@@ -107,8 +107,6 @@ func Create(contract Declaration, chainID string, privkey identity.PrivateKey) (
 func create(contract Declaration, chainID string, signfunc func(*ptnet.Event) error) (*ptnet.Event, error) {
 
 	payload, _ := json.Marshal(contract)
-	//println("contract:")
-	//println(string(payload))
 
 	// FIXME convert private to pub
 	pubkey := identity.PublicKey{}
@@ -118,10 +116,10 @@ func create(contract Declaration, chainID string, signfunc func(*ptnet.Event) er
 			ChainID:    chainID, // test values
 			ContractID: contract.ContractID,
 			Schema:     contract.Schema,
-			Action:     ptnet.BEGIN, // state machine action
-			Mult:       1, // triggers input action 'n' times
-			Payload:    payload, // arbitrary data optionally included
-			Pubkey:     pubkey, // REVIEW: will there always be a single input?
+			Action:     ptnet.EXEC, // state machine action
+			Mult:       1,          // triggers input action 'n' times
+			Payload:    payload,    // arbitrary data optionally included
+			Pubkey:     pubkey,     // REVIEW: will there always be a single input?
 		}, signfunc)
 
 	if err != nil {
@@ -155,7 +153,7 @@ func state(schema string, contractID string) (ptnet.State, error) {
 
 // validate event against guard conditions
 func evalGuards(event *ptnet.Event) error {
-	if event.Action == ptnet.BEGIN {
+	if event.Action == ptnet.EXEC {
 		// REVIEW: should identity making offer be validated?
 		return nil
 	}
@@ -274,9 +272,9 @@ func CanRedeem(contract Declaration, publicKey identity.PublicKey) bool {
 
 var contractFormat string = `
 Inputs: {{ range $_, $input := .Inputs}}
-	Address: {{ printf "%x" $input.Address }} Amount: {{ $input.Amount }} {{ end }}
+	Address: {{ printf "%x" $input.Address }} Amount: {{ $input.Amount }} Token: {{ $input.Token }} {{ end }}
 Outputs: {{ range $_, $output := .Outputs}}
-	Address: {{ printf "%x" $output.Address }} Amount: {{ $output.Amount }} {{ end }}
+	Address: {{ printf "%x" $output.Address }} Amount: {{ $output.Amount }} Token: {{ $output.Token }} {{ end }}
 BlockHeight: {{ .BlockHeight }}
 ContractID: {{ .ContractID }}
 Schema: {{ .Schema }}
@@ -297,7 +295,7 @@ type contractSource struct {
 }
 
 func (c contractSource) GetState() (s []uint64) {
-	return ptnet.ToVector(s)
+	return ptnet.ToVector(c.State)
 }
 
 func (contract Declaration) String() string {
@@ -331,7 +329,6 @@ func (c Contract) Version() []byte {
 	//fmt.Printf("%s", data)
 	return x.Shad(data)
 }
-
 
 /*
 func (v Variables) MarshalJSON() ([]byte, error) {

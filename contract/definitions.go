@@ -30,11 +30,11 @@ func OptionContract() Declaration {
 		AddressAmountMap{Address[USER2], 1, 0},     // deposit to user2
 	}
 
-	d.BlockHeight = 60221409             // deadline for halting state
+	d.BlockHeight = 60221409 // deadline for halting state
 
 	sig, _ := json.Marshal(d.Variables)
 	extids := append(x.Ext(ptnet.OptionV1), sig)
-    d.ContractID = x.NewContractID(extids)
+	d.ContractID = x.NewContractID(extids)
 
 	return d
 }
@@ -47,13 +47,13 @@ func OptionTemplate() Declaration {
 		Variables: Variables{
 			ContractID:  x.NewContractID(x.Ext(ptnet.OptionV1, "|SALT|")),
 			BlockHeight: 0, // deadline for halting state 0 = never
-			Inputs: []AddressAmountMap{},
-			Outputs: []AddressAmountMap{},
+			Inputs:      []AddressAmountMap{},
+			Outputs:     []AddressAmountMap{},
 		},
-		Schema:      ptnet.OptionV1,
-		Capacity:    gen.OptionV1.GetCapacityVector(),
-		State:       gen.OptionV1.GetInitialState(),
-		Actions:     gen.OptionV1.Transitions,
+		Schema:   ptnet.OptionV1,
+		Capacity: gen.OptionV1.GetCapacityVector(),
+		State:    gen.OptionV1.GetInitialState(),
+		Actions:  gen.OptionV1.Transitions,
 		Guards: []Condition{ // guard clause restricts actions
 			Role(gen.OptionV1, []string{"OPEN"}, 1),
 			Role(gen.OptionV1, []string{"OPEN"}, 1),
@@ -82,7 +82,7 @@ func TicTacToeContract() Declaration {
 		AddressAmountMap{Address[PLAYERO], 1, 0},
 	}
 
-	d.BlockHeight = 60221409             // deadline for halting state
+	d.BlockHeight = 60221409 // deadline for halting state
 
 	return d
 }
@@ -91,16 +91,16 @@ func TicTacToeTemplate() Declaration {
 
 	return Declaration{ // array of inputs/outputs also referenced by guards and conditions
 		Variables: Variables{
-			ContractID:  x.NewContractID(x.Ext(ptnet.OctoeV1)), // FIXME add salt
-			BlockHeight: 0, // deadline for halting state 0 = never
-			Inputs: []AddressAmountMap{}, // array of input depositors
-			Outputs: []AddressAmountMap{}, // array of possible redeemers
+			ContractID:  x.NewContractID(x.Ext(ptnet.OctoeV1)),
+			BlockHeight: 0,                    // deadline for halting state 0 = never
+			Inputs:      []AddressAmountMap{}, // array of input depositors
+			Outputs:     []AddressAmountMap{}, // array of possible redeemers
 
 		},
-		Schema:      ptnet.OctoeV1,             // versioned contract schema
-		Capacity:    gen.OctoeV1.GetCapacityVector(), // capacity for each place
-		State:       gen.OctoeV1.GetInitialState(),   // initial state
-		Actions:     gen.OctoeV1.Transitions,         // state machine defined transitions
+		Schema:   ptnet.OctoeV1,                   // versioned contract schema
+		Capacity: gen.OctoeV1.GetCapacityVector(), // capacity for each place
+		State:    gen.OctoeV1.GetInitialState(),   // initial state
+		Actions:  gen.OctoeV1.Transitions,         // state machine defined transitions
 		Guards: []Condition{ // guard clause restricts actions
 			Role(gen.OctoeV1, []string{}, 1),         // depositor is unrestricted
 			Role(gen.OctoeV1, []string{"turn_x"}, 1), // players must
@@ -118,16 +118,16 @@ func RegistryTemplate() Declaration {
 
 	return Declaration{ // array of inputs/outputs also referenced by guards and conditions
 		Variables: Variables{
-			ContractID:	 x.NewContractID(x.Ext(ptnet.Meta)),
+			ContractID:  x.NewContractID(x.Ext(ptnet.Meta)),
 			BlockHeight: 0, // deadline for halting state 0 = never
 			Inputs:      nil,
 			Outputs:     nil,
 		},
-		Schema:      ptnet.FiniteV1,
-		Capacity:    gen.FiniteV1.GetCapacityVector(),
-		State:       gen.FiniteV1.GetInitialState(),
-		Actions:     gen.FiniteV1.Transitions,
-		Guards:      nil,
-		Conditions:  nil,
+		Schema:     ptnet.FiniteV1,
+		Capacity:   gen.FiniteV1.GetCapacityVector(),
+		State:      gen.FiniteV1.GetInitialState(),
+		Actions:    gen.FiniteV1.Transitions,
+		Guards:     nil,
+		Conditions: nil,
 	}
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PACKAGES=(ptnet contract identity finite x wsapi)
+PACKAGES=(ptnet contract wsapi gen blockchain identity sim finite x )
 
 for PKG in ${PACKAGES[*]} ; do
   go build ./$PKG

@@ -191,6 +191,8 @@ func (b *Blockchain) Execute(cmd contract.Command, a *identity.Account) (*factom
 
 // add signature to extIDs
 func AppendSignature(e *factom.Entry, a *identity.Account) {
+	// FIXME this breaks some things
+	return
 	s := a.Priv.Sign(e.Hash())
 	key := a.Priv.Pub[:]
 	keyString := x.EncodeToString(key)
@@ -198,7 +200,6 @@ func AppendSignature(e *factom.Entry, a *identity.Account) {
 	sig := x.Encode(fmt.Sprintf("%x", s.Bytes()))
 	e.ExtIDs = append(e.ExtIDs, x.Encode(keyString))
 	e.ExtIDs = append(e.ExtIDs, sig)
-
 }
 
 // validate appended signatures

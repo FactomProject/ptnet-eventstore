@@ -136,6 +136,12 @@ func (d *Account) GetPrivateKey() PrivateKey {
 	return k
 }
 
+func (d *Account) GetPublicKey () PublicKey {
+	pub := PublicKey{}
+	copy(pub[:], x.PrivateKeyToPub(d.Priv.Key[:]))
+	return pub
+}
+
 func PrivateKeyFromFctSecret(s string) PrivateKey {
 	h, _ := primitives.HumanReadableFactoidPrivateKeyToPrivateKey(s)
 	k := PrivateKey{}

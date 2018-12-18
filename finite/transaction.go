@@ -2,7 +2,6 @@ package finite
 
 import (
 	"bytes"
-	"github.com/FactomProject/factom"
 	"github.com/FactomProject/ptnet-eventstore/contract"
 	"github.com/FactomProject/ptnet-eventstore/identity"
 	"github.com/FactomProject/ptnet-eventstore/ptnet"
@@ -40,11 +39,10 @@ func ExecuteTransaction(x contract.Command, privKey identity.PrivateKey) (Transa
 var offerFormat string = `
 ChainID: {{.ChainID}}
 Inputs: {{ range $_, $input := .Inputs}}
-	Address: {{ printf "%x" $input.Address }} Amount: {{ $input.Amount }} {{ end }}
+Address: {{ printf "%x" $input.Address }} Amount: {{ $input.Amount }} Color: {{ $input.Token }} {{ end }}
 Outputs: {{ range $_, $output := .Outputs}}
-	Address: {{ printf "%x" $output.Address }} Amount: {{ $output.Amount }} {{ end }}
+	Address: {{ printf "%x" $output.Address }} Amount: {{ $output.Amount }} Color {{ $output.Token }} {{ end }}
 BlockHeight: {{ .BlockHeight }}
-Salt: {{ .Salt }}
 ContractID: {{ .ContractID }}
 Schema: {{ .Schema }}
 State: {{ .GetState }}
@@ -71,22 +69,4 @@ func (s offerSource) GetState() []uint64 {
 
 type offerSource struct {
 	Offer
-}
-
-// FIXME
-var transactionFormat string = `
-Schema: {{.Schema}}
-Action: {{.Action}}
-`
-var transactionTemplate *template.Template = template.Must(
-	template.New("").Parse(transactionFormat),
-)
-
-func (transaction Transaction) String() string {
-	return transaction.Event.String()
-}
-
-func (t Transaction) Dispatch() (*factom.Entry, error) {
-	// FIXME convert to entry
-	return nil, nil
 }

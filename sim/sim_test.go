@@ -11,7 +11,6 @@ import (
 	"time"
 )
 
-
 func TestSendingCommitAndReveal(t *testing.T) {
 	numEntries := 21 // including head entry
 
@@ -39,7 +38,7 @@ func TestSendingCommitAndReveal(t *testing.T) {
 		t.Run("Create Entries", func(t *testing.T) {
 			for i := 1; i < numEntries; i++ {
 				ts := x.Encode(fmt.Sprintf("%v", time.Now().UnixNano()))
-				body :=x.Encode(fmt.Sprintf("hello@%v", i))
+				body := x.Encode(fmt.Sprintf("hello@%v", i))
 				extids := [][]byte{ts}
 				_, err := chain.Commit(b, extids, body)
 				assert.Nil(t, err)
@@ -52,9 +51,10 @@ func TestSendingCommitAndReveal(t *testing.T) {
 			x.ShutDownEverything(t)
 		})
 
-		t.Run("Verify EC Balance", func(t *testing.T) {
+		t.Run("Verify Entries", func(t *testing.T) {
 			bal := x.GetBalanceEC(state0, b.EcPub())
 			assert.Equal(t, int64(444-numEntries-10), bal, "EC spend mismatch")
+			assert.Equal(t, len(state0.Holding), 0, "No messages should be in holding")
 		})
 
 	})

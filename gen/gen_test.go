@@ -8,14 +8,12 @@ import (
 	"testing"
 )
 
-
 func TestGenerateStateMachines(t *testing.T) {
 
-	generate := func (path string, varName string, filename string) statemachine.PetriNet {
+	generate := func(path string, varName string, filename string) statemachine.PetriNet {
 		p, _ := statemachine.LoadPnmlFromFile(path)
 		src := statemachine.Generate(p, varName)
 		ioutil.WriteFile(filename, src.Bytes(), 0600)
-		//println(src.String())
 		return p
 	}
 

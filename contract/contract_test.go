@@ -29,14 +29,15 @@ func TestVariableMarshalling(t *testing.T) {
 
 func TestTransactionSequence(t *testing.T) {
 	c := finite.TicTacToeContract()
+
 	// make commits and test for expected error outcome
-	commit := func (action string, key PrivateKey, expectError bool) (*ptnet.Event, error) {
+	commit := func(action string, key PrivateKey, expectError bool) (*ptnet.Event, error) {
 		pub := PublicKey{}
 		copy(pub[:], x.PrivateKeyToPub(key[:]))
 
 		event, err := contract.Commit(contract.Command{
 			ChainID:    c.ChainID,
-			ContractID: c.ContractID, // FIXME this should be unique per usage instead is set to chainID
+			ContractID: c.ContractID,  // FIXME this should be unique per usage instead is set to chainID
 			Schema:     ptnet.OctoeV1, // state machine version
 			Action:     action,        // state machine action
 			Mult:       1,             // triggers input action 'n' times
@@ -49,7 +50,6 @@ func TestTransactionSequence(t *testing.T) {
 		} else {
 			assert.Nil(t, err, fmt.Sprintf("unexpected from action %v ", action))
 		}
-		//println(event.String())
 		return event, err
 	}
 
@@ -59,7 +59,7 @@ func TestTransactionSequence(t *testing.T) {
 		assert.NotEqual(t, Private[PLAYERX], Private[PLAYERO], "test keys should not be the same")
 		assert.Equal(t, true, contract.Exists(ptnet.OctoeV1, c.ContractID), "Failed to retrieve contract declaration")
 		assert.Equal(t, event.Oid, c.ContractID)
-		assert.Equal(t, event.Action, ptnet.BEGIN, "")
+		assert.Equal(t, event.Action, ptnet.EXEC, "")
 
 		assert.Equal(t, StateVector{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0}, event.InputState)
 		assert.Equal(t, StateVector{0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1}, event.OutputState)
@@ -82,7 +82,6 @@ func TestTransactionSequence(t *testing.T) {
 			// depositor completes the contract with a winner judgement
 			commit("WIN_X", Private[DEPOSITOR], expectValid)
 		})
-
 
 		t.Run("redeem completed contract", func(t *testing.T) {
 			assert.True(t, contract.IsHalted(c.Declaration))

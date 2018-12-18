@@ -28,15 +28,13 @@ func TestTransactionSequence(t *testing.T) {
 				ChainID:    offer.ChainID,
 				ContractID: offer.ContractID,
 				Schema:     ptnet.OptionV1,
-				Action:     action,         // state machine action
-				Mult:       1,              // triggers input action 'n' times
-				Payload:    nil,            // arbitrary data optionally included
+				Action:     action, // state machine action
+				Mult:       1,      // triggers input action 'n' times
+				Payload:    nil,    // arbitrary data optionally included
 				Pubkey:     pub,
 			}, key)
 
 		d, _ := json.Marshal(txn)
-		println(txn.String())
-		//txn.GetDigest()
 		fmt.Printf("%s", d)
 
 		var msg string
@@ -49,12 +47,11 @@ func TestTransactionSequence(t *testing.T) {
 		return txn, err
 	}
 
-	//println(offer.String())
 	t.Run("publish offer", func(t *testing.T) {
 		txn := finite.OfferTransaction(offer, Private[DEPOSITOR])
 		assert.Equal(t, true, contract.Exists(offer.Schema, offer.ContractID), "missing declaration")
 		assert.Equal(t, txn.Oid, offer.ContractID)
-		assert.Equal(t, txn.Action, ptnet.BEGIN, "")
+		assert.Equal(t, txn.Action, ptnet.EXEC, "")
 		assert.Equal(t, txn.InputState, StateVector{1, 0, 0, 0, 0})
 		assert.Equal(t, txn.OutputState, StateVector{0, 1, 0, 0, 0})
 		assert.False(t, contract.IsHalted(offer.Declaration))
