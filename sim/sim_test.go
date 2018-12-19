@@ -36,6 +36,7 @@ func TestSendingCommitAndReveal(t *testing.T) {
 		})
 
 		t.Run("Create Entries", func(t *testing.T) {
+			// TODO: execute a contract
 			for i := 1; i < numEntries; i++ {
 				ts := x.Encode(fmt.Sprintf("%v", time.Now().UnixNano()))
 				body := x.Encode(fmt.Sprintf("hello@%v", i))

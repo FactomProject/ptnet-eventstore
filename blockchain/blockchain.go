@@ -86,19 +86,17 @@ func (b *Blockchain) Digest() []byte {
 
 // use blockchain spec to create new factom chain
 func (b *Blockchain) Deploy(a *identity.Account) (*factom.Entry, error) {
-	e := AppendSignature(x.Entry(b.ChainID, b.ExtIDs, b.Digest()), a)
-	c := x.NewChain(e)
+	e := x.Entry(b.ChainID, b.ExtIDs, b.Digest())
+	c := x.NewChain(&e)
 	commit, _ := x.ComposeChainCommit(a.Priv, c)
 	reveal, _ := x.ComposeRevealEntryMsg(a.Priv, c.FirstEntry)
 	err := sim.Dispatch(commit, reveal)
-	return e, err
+	return &e, err
 }
 
 // create a new signed entry on factom
 func (b *Blockchain) Commit(a *identity.Account, extids [][]byte, content []byte) (*factom.Entry, error) {
-	// FIXME
 	e := AppendSignature(x.Entry(b.ChainID, extids, content), a)
-	//e := x.Entry(b.ChainID, extids, content)
 	commit, _ := x.ComposeCommitEntryMsg(a.Priv, *e)
 	reveal, _ := x.ComposeRevealEntryMsg(a.Priv, e)
 	err := sim.Dispatch(commit, reveal)
@@ -192,7 +190,6 @@ func (b *Blockchain) Execute(cmd contract.Command, a *identity.Account) (*factom
 // add signature to extIDs
 func AppendSignature(entry factom.Entry, a *identity.Account) *factom.Entry{
 	e := factom.Entry{ entry.ChainID, entry.ExtIDs, entry.Content }
-	/*
 	s := a.Priv.Sign(e.Hash())
 	key := a.Priv.Pub[:]
 	keyString := x.EncodeToString(key)
@@ -200,8 +197,6 @@ func AppendSignature(entry factom.Entry, a *identity.Account) *factom.Entry{
 	sig := x.Encode(fmt.Sprintf("%x", s.Bytes()))
 	e.ExtIDs = append(e.ExtIDs, x.Encode(keyString))
 	e.ExtIDs = append(e.ExtIDs, sig)
-	*/
-	println(e.String())
 	return &e
 }
 
