@@ -1,21 +1,21 @@
 ### WIP
 
-Valid events are queued for persistence to disk and to factom blockchain.
+Valid events are queued for persistence to factom blockchain.
 Allow existing chains to be validated against state machines replay.
 Allow aggregation of contracts to calculate wallet balances by account.
 
 ### BACKLOG
 
-- [ ] refactor to use gopetri instead of ptnet everwhere - missing capacity check without this
-- [ ] run w/ fnode sims ? & tap into journal messages ?
-- [ ] update to work with factom connect or factomd to publish transactions
-- [ ] 'cache miss' should result when a state record is not found in memory when working w/ actual blockchain storage
 - [ ] demo smart contract protocol playback/validation
 - [ ] Define Factom Asset Token FATIP spec for petri-nets
       assets are considered locked when state machine begins and awarded on halt 
+- [ ] refactor 'finitie' transactions to avoid adding redundant sigs since that's what blockchains are for ;)
 
 ### COMPLETE
  
+- [x] update to work with factom connect or factomd to publish transactions
+- [x] run w/ fnode sim 
+- [x] refactor to use gopetri instead of ptnet everwhere - missing capacity check without this
 - [x] generate state machine code from pnml
 - [x] improve string output when printing data structures for examples in this project
 - [x] add gzip to payload data
@@ -35,6 +35,7 @@ Allow aggregation of contracts to calculate wallet balances by account.
 
 ### ICEBOX
 
+- [ ] 'cache miss' should result when a state record is not found in memory when working w/ actual blockchain storage
 - [ ] signing/externalIDs - contracts should output an event as a valid factom entry
 - [ ] demo composing multiple state machines in a single contract
 - [ ] demo up-converting a contract from v1 -> v2 by extending the length of the statevector
@@ -46,3 +47,4 @@ Allow aggregation of contracts to calculate wallet balances by account.
 - [ ] read state machine definitions from json files
 - [ ] allow extra param to allow API users to specify level of persistence MEM -> Disk -> Blockchain
 - [ ] demonstrate a single game of tic-tac-toe by OID using 2 agents + arbiter over blockchain
+- [ ] tap into journal messages (for testing) - not needed b/c memdb is used as a write-through cache
