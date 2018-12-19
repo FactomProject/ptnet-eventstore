@@ -54,7 +54,7 @@ func TestSendingCommitAndReveal(t *testing.T) {
 		t.Run("Verify Entries", func(t *testing.T) {
 			bal := x.GetBalanceEC(state0, b.EcPub())
 			assert.Equal(t, int64(444-numEntries-10), bal, "EC spend mismatch")
-			assert.Equal(t, len(state0.Holding), 0, "No messages should be in holding")
+			assert.Equal(t, 0, len(state0.Holding),"No messages should be in holding")
 		})
 
 	})
