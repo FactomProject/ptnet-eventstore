@@ -28,6 +28,7 @@ var StateMachines map[string]Machine = map[string]Machine{
 	OctoeV1:   octoeMachine,
 	OptionV1:  optionMachine,
 	FiniteV1:  finiteMachine,
+	Spend:     spendMachine,
 	Meta:      finiteMachine,
 }
 
@@ -48,5 +49,10 @@ var octoeMachine Machine = Machine{
 
 var finiteMachine Machine = Machine{
 	StateMachine: gen.FiniteV1.StateMachine(),
+	db:           EventStore(),
+}
+
+var spendMachine Machine = Machine{
+	StateMachine: gen.Spend.StateMachine(),
 	db:           EventStore(),
 }

@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-func TestDSL(t *testing.T) {
+func TestOptionDSL(t *testing.T) {
 
-	b := NewBlockchain("foo")
+	b := NewBlockchain("foo", "option")
 	actor := b.GetAccount("BANK")
 
 	t.Run("Prepare Chains", func (t *testing.T) {
@@ -48,7 +48,7 @@ func TestDSL(t *testing.T) {
 
 			oc, _ := Option.Offer(b, c, b.GetAccount("DEPOSITOR"))
 
-			assert.True(t, Option.Exists(c.ContractID), "contrat should now exist")
+			assert.True(t, Option.Exists(c.ContractID), "contract should now exist")
 			println(oc.String())
 		})
 

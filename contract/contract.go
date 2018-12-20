@@ -188,9 +188,9 @@ func evalGuards(event *ptnet.Event) error {
 		return errors.New("missing contract " + event.Schema + "." + event.Oid)
 	}
 
-	c := raw.(Declaration)
 
 	currentState, _ := state(event.Schema, event.Oid)
+	c := raw.(Declaration)
 
 	for i, g := range c.Guards {
 		_, err := ptnet.VectorAdd(currentState.Vector, Transition(g), 1)
@@ -269,10 +269,16 @@ func canExecute(state ptnet.State, transition Transition, multiplier uint64) boo
 func IsHalted(contract Declaration) bool {
 	state, _ := getState(contract.Schema, contract.ContractID)
 	for _, transition := range contract.Actions {
-		if canExecute(state, transition, 1) {
-			// REVIEW is it better to enforce state machine is halted without guards?
-			// alternatively allow guard/action combination to determine halting state
-			return false
+		_, err := ptnet.VectorAdd(state.Vector, transition, 1)
+
+		if err != nil {
+			continue
+		}
+
+		for _, g := range contract.Guards {
+			if canExecute(state, Transition(g), 1) {
+				return false
+			}
 		}
 	}
 
@@ -281,6 +287,12 @@ func IsHalted(contract Declaration) bool {
 
 func CanRedeem(contract Declaration, publicKey identity.PublicKey) bool {
 	state, _ := getState(contract.Schema, contract.ContractID)
+
+	// in this case contract is invalid
+	if len(contract.Conditions) > len(contract.Outputs) {
+		return false
+	}
+
 	for i, condition := range contract.Conditions {
 		if !publicKey.MatchesAddress(contract.Outputs[i].Address) {
 			continue

@@ -17,7 +17,13 @@ var NewBlockchain = blockchain.NewBlockchain
 
 
 var FROM = TO
+
 var Token0 = ptnet.Default
+var Token1 = ptnet.Coin
+
+var Karma = ptnet.Karma
+var AnitKarma = ptnet.AntiKarma
+
 var IsHalted = contract.IsHalted
 
 func ID (extIDs ...string) string {
