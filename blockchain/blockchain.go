@@ -27,10 +27,10 @@ type Token struct {
 }
 
 type Blockchain struct {
-	ChainID   string
-	ExtIDs    [][]byte
-	Tokens    []Token
-	Contracts map[string]contract.Contract
+	ChainID   string `json:"chainid"`
+	ExtIDs    [][]byte `json:"extids"`
+	Tokens    []Token `json:"tokens"`
+	Contracts map[string]contract.Contract `json:"contracts"`
 }
 
 func NewBlockchain(extids ...string) *Blockchain {

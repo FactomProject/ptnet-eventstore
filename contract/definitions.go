@@ -50,19 +50,22 @@ func OptionTemplate() Declaration {
 			Inputs:      []AddressAmountMap{},
 			Outputs:     []AddressAmountMap{},
 		},
-		Schema:   ptnet.OptionV1,
-		Capacity: gen.OptionV1.GetCapacityVector(),
-		State:    gen.OptionV1.GetInitialState(),
-		Actions:  gen.OptionV1.Transitions,
-		Guards: []Condition{ // guard clause restricts actions
-			Role(gen.OptionV1, []string{"OPEN"}, 1),
-			Role(gen.OptionV1, []string{"OPEN"}, 1),
-			Role(gen.OptionV1, []string{"OPEN"}, 1),
-		},
-		Conditions: []Condition{ // contract conditions specify additional redeem conditions
-			Check(gen.OptionV1, []string{"REFUND"}, 1),
-			Check(gen.OptionV1, []string{"OUT1"}, 1),
-			Check(gen.OptionV1, []string{"OUT2"}, 1),
+		Invariants: Invariants{
+			Schema:   ptnet.OptionV1,
+			Parameters: gen.OptionV1.Places,
+			Capacity: gen.OptionV1.GetCapacityVector(),
+			State:    gen.OptionV1.GetInitialState(),
+			Actions:  gen.OptionV1.Transitions,
+			Guards: []Condition{ // guard clause restricts actions
+				Role(gen.OptionV1, []string{"OPEN"}, 1),
+				Role(gen.OptionV1, []string{"OPEN"}, 1),
+				Role(gen.OptionV1, []string{"OPEN"}, 1),
+			},
+			Conditions: []Condition{ // contract conditions specify additional redeem conditions
+				Check(gen.OptionV1, []string{"REFUND"}, 1),
+				Check(gen.OptionV1, []string{"OUT1"}, 1),
+				Check(gen.OptionV1, []string{"OUT2"}, 1),
+			},
 		},
 	}
 }
@@ -97,19 +100,23 @@ func TicTacToeTemplate() Declaration {
 			Outputs:     []AddressAmountMap{}, // array of possible redeemers
 
 		},
-		Schema:   ptnet.OctoeV1,                   // versioned contract schema
-		Capacity: gen.OctoeV1.GetCapacityVector(), // capacity for each place
-		State:    gen.OctoeV1.GetInitialState(),   // initial state
-		Actions:  gen.OctoeV1.Transitions,         // state machine defined transitions
-		Guards: []Condition{ // guard clause restricts actions
-			Role(gen.OctoeV1, []string{}, 1),         // depositor is unrestricted
-			Role(gen.OctoeV1, []string{"turn_x"}, 1), // players must
-			Role(gen.OctoeV1, []string{"turn_o"}, 1), // take turns
-		},
-		Conditions: []Condition{ // contract conditions specify additional redeem conditions
-			Check(gen.OctoeV1, []string{"REFUND"}, 1), // no winner take 1 token prize back
-			Check(gen.OctoeV1, []string{"OUT_X"}, 1),  // pay player X 1 token
-			Check(gen.OctoeV1, []string{"OUT_O"}, 1),  // pay player O 1 token
+		Invariants: Invariants{
+			Schema:   ptnet.OctoeV1,                   // versioned contract schema
+			Parameters: gen.OctoeV1.Places,
+			Capacity: gen.OctoeV1.GetCapacityVector(), // capacity for each place
+			State:    gen.OctoeV1.GetInitialState(),   // initial state
+			Actions:  gen.OctoeV1.Transitions,         // state machine defined transitions
+			Guards: []Condition{ // guard clause restricts actions
+				Role(gen.OctoeV1, []string{}, 1),         // depositor is unrestricted
+				Role(gen.OctoeV1, []string{"turn_x"}, 1), // players must
+				Role(gen.OctoeV1, []string{"turn_o"}, 1), // take turns
+			},
+			Conditions: []Condition{ // contract conditions specify additional redeem conditions
+				Check(gen.OctoeV1, []string{"REFUND"}, 1), // no winner take 1 token prize back
+				Check(gen.OctoeV1, []string{"OUT_X"}, 1),  // pay player X 1 token
+				Check(gen.OctoeV1, []string{"OUT_O"}, 1),  // pay player O 1 token
+			},
+
 		},
 	}
 }
@@ -123,11 +130,14 @@ func RegistryTemplate() Declaration {
 			Inputs:      nil,
 			Outputs:     nil,
 		},
-		Schema:     ptnet.FiniteV1,
-		Capacity:   gen.FiniteV1.GetCapacityVector(),
-		State:      gen.FiniteV1.GetInitialState(),
-		Actions:    gen.FiniteV1.Transitions,
-		Guards:     nil,
-		Conditions: nil,
+		Invariants: Invariants{
+			Schema:     ptnet.FiniteV1,
+			Parameters: gen.FiniteV1.Places,
+			Capacity:   gen.FiniteV1.GetCapacityVector(),
+			State:      gen.FiniteV1.GetInitialState(),
+			Actions:    gen.FiniteV1.Transitions,
+			Guards:     nil,
+			Conditions: nil,
+		},
 	}
 }

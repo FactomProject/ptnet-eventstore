@@ -37,14 +37,19 @@ type Variables struct {
 	Outputs     []AddressAmountMap `json:"outputs"`
 }
 
-type Declaration struct {
-	Variables
+type Invariants struct {
 	Schema     string                `json:"schema"`
+	Parameters map[string]Place      `json:"parameters"`
 	Capacity   StateVector           `json:"capacity"`
 	State      StateVector           `json:"state"`
 	Actions    map[Action]Transition `json:"actions"`
 	Guards     []Condition           `json:"guards"`     // enforces contract roles
 	Conditions []Condition           `json:"conditions"` // enforce redeem conditions
+}
+
+type Declaration struct {
+	Variables
+	Invariants
 }
 
 type State struct {
@@ -329,13 +334,3 @@ func (c Contract) Version() []byte {
 	//fmt.Printf("%s", data)
 	return x.Shad(data)
 }
-
-/*
-func (v Variables) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		ID       string  `json:"id"`
-	}{
-		ID:       v.ContractID,
-	})
-}
-*/
