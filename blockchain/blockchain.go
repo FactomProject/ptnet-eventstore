@@ -16,20 +16,14 @@ import (
 	"text/template"
 )
 
-type Color uint8
-
-const (
-	Default = Color(iota)
-)
-
 type Token struct {
-	Color Color
+	Color uint8
 }
 
 type Blockchain struct {
-	ChainID   string `json:"chainid"`
-	ExtIDs    [][]byte `json:"extids"`
-	Tokens    []Token `json:"tokens"`
+	ChainID   string                       `json:"chainid"`
+	ExtIDs    [][]byte                     `json:"extids"`
+	Tokens    []Token                      `json:"tokens"`
 	Contracts map[string]contract.Contract `json:"contracts"`
 }
 
@@ -42,7 +36,7 @@ func NewBlockchain(extids ...string) *Blockchain {
 	b := Blockchain{
 		ChainID:   x.NewChainID(ext),
 		ExtIDs:    ext,
-		Tokens:    []Token{{Color: Default}},
+		Tokens:    []Token{{Color: ptnet.Default}},
 		Contracts: contract.Contracts,
 	}
 
@@ -109,7 +103,7 @@ func Metachain() *Blockchain {
 	b := Blockchain{
 		ChainID: x.NewChainID(ext),
 		ExtIDs:  ext,
-		Tokens:  []Token{{Color: Default}},
+		Tokens:  []Token{{Color: ptnet.Default}},
 		Contracts: map[string]contract.Contract{
 			ptnet.FiniteV1: contract.Contracts[ptnet.FiniteV1],
 		},
@@ -188,8 +182,8 @@ func (b *Blockchain) Execute(cmd contract.Command, a *identity.Account) (*factom
 }
 
 // add signature to extIDs
-func AppendSignature(entry factom.Entry, a *identity.Account) *factom.Entry{
-	e := factom.Entry{ entry.ChainID, entry.ExtIDs, entry.Content }
+func AppendSignature(entry factom.Entry, a *identity.Account) *factom.Entry {
+	e := factom.Entry{entry.ChainID, entry.ExtIDs, entry.Content}
 	s := a.Priv.Sign(e.Hash())
 	key := a.Priv.Pub[:]
 	keyString := x.EncodeToString(key)
@@ -201,11 +195,11 @@ func AppendSignature(entry factom.Entry, a *identity.Account) *factom.Entry{
 }
 
 // validate appended signatures
-func ValidSignature(entry *factom.Entry)  bool {
+func ValidSignature(entry *factom.Entry) bool {
 	l := len(entry.ExtIDs)
 	key := entry.ExtIDs[l-2]
 	signature := entry.ExtIDs[l-1]
-	e := factom.Entry{ entry.ChainID, entry.ExtIDs[:l-2], entry.Content }
+	e := factom.Entry{entry.ChainID, entry.ExtIDs[:l-2], entry.Content}
 
 	pub := new([32]byte)
 	x.HexDecode(pub[:], key)
@@ -216,10 +210,10 @@ func ValidSignature(entry *factom.Entry)  bool {
 	return x.VerifyCanonical(pub, e.Hash(), sig)
 }
 
-func ValidContract(entry *factom.Entry)  bool {
+func ValidContract(entry *factom.Entry) bool {
 	_, ok := contract.Contracts[x.Decode(entry.ExtIDs[0])]
 
-	if ! ok ||  ! ValidSignature(entry) {
+	if !ok || !ValidSignature(entry) {
 		return false
 	}
 

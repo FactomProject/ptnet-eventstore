@@ -16,9 +16,12 @@ state machines to a distinct revision-control chain on Factom
 */
 
 const Meta string = "Meta" // registry schema
-const OptionV1 string = "OptionV1" // version contract definitions by using schema name
-const OctoeV1 string = "OctoeV1" // this allows for future mechanism to 'upconvert' v1 -> v2
-const FiniteV1 string = "FiniteV1" // meta protocol for publishing blockchain definitions
+const Tip string = "Tip"
+const Spend string = "Spend"
+const FiniteV1 string = "FiniteV1"   // meta protocol for publishing blockchain definitions
+const OptionV1 string = "OptionV1"   // version contract definitions by using schema name
+const AuctionV1 string = "AuctionV1" // protocol for running an Auction between tokesn
+const OctoeV1 string = "OctoeV1"     // this allows for future mechanism to 'upconvert' v1 -> v2
 
 var StateMachines map[string]Machine = map[string]Machine{
 	"counter": counterMachine,

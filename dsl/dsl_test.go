@@ -44,10 +44,11 @@ func TestDSL(t *testing.T) {
 		println(c.String())
 
 		t.Run("Publish Contract Offer", func (t *testing.T) {
-			assert.False(t, Option.Exists(c.ContractID), "contract not yet created")
+			assert.False(t, Option.Exists(c.ContractID), "contract should not exist yet")
+
 			oc, _ := Option.Offer(b, c, b.GetAccount("DEPOSITOR"))
 
-			assert.True(t, Option.Exists(c.ContractID))
+			assert.True(t, Option.Exists(c.ContractID), "contrat should now exist")
 			println(oc.String())
 		})
 

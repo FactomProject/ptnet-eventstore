@@ -17,6 +17,14 @@ import (
 // Reserved Actions
 const EXEC string = "EXEC"
 
+// Token colors
+const (
+	Default = uint8(iota)
+	Coin
+	Karma
+	AntiKarma
+)
+
 type State struct {
 	Oid       string      `json:"oid"`
 	Vector    StateVector `json:"vector"`

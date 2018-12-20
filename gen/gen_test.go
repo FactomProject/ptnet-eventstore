@@ -22,6 +22,10 @@ func TestGenerateStateMachines(t *testing.T) {
 	generate("../pnml/option.xml", "OptionV1", "option.go")
 	generate("../pnml/octoe.xml", "OctoeV1", "octoe.go")
 	generate("../pnml/registry.xml", "FiniteV1", "registry.go")
+	generate("../pnml/auction.xml", "AuctionV1", "auction.go")
+	generate("../pnml/spend.xml", "Spend", "spend.go")
+	generate("../pnml/tip.xml", "Tip", "tip.go")
+	return
 }
 
 func TestUsingGeneratedSource(t *testing.T) {
@@ -32,4 +36,7 @@ func TestUsingGeneratedSource(t *testing.T) {
 	assert.NotNil(t, gen.OptionV1)
 	assert.NotNil(t, gen.OctoeV1)
 	assert.NotNil(t, gen.FiniteV1)
+	assert.NotNil(t, gen.AuctionV1)
+	assert.NotNil(t, gen.Spend)
+	assert.NotNil(t, gen.Tip)
 }

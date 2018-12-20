@@ -76,6 +76,24 @@ var Contracts map[string]Contract = map[string]Contract{
 		Template: RegistryTemplate(),
 		db:       ContractStore(),
 	},
+	ptnet.Spend: Contract{
+		Schema:   ptnet.Spend,
+		Machine:  gen.Spend.StateMachine(),
+		Template: SpendTemplate(),
+		db:       ContractStore(),
+	},
+	ptnet.Tip: Contract{
+		Schema:   ptnet.Tip,
+		Machine:  gen.Tip.StateMachine(),
+		Template: SpendTemplate(),
+		db:       ContractStore(),
+	},
+	ptnet.AuctionV1: Contract{
+		Schema:   ptnet.AuctionV1,
+		Machine:  gen.AuctionV1.StateMachine(),
+		Template: SpendTemplate(),
+		db:       ContractStore(),
+	},
 	ptnet.OptionV1: Contract{
 		Schema:   ptnet.OptionV1,
 		Machine:  gen.OptionV1.StateMachine(),

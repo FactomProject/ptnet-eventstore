@@ -20,7 +20,7 @@ func TestBlockchainApi(t *testing.T) {
 	b := blockchain.NewBlockchain("Merged", ptnet.OctoeV1, ptnet.OptionV1)
 
 	d := b.Tokens[0]
-	assert.Equal(t, d.Color, blockchain.Default)
+	assert.Equal(t, d.Color, ptnet.Default)
 
 	a := b.GetAccount("BANK")
 	u1 := b.GetAccount("USER1")
@@ -37,6 +37,7 @@ func TestBlockchainApi(t *testing.T) {
 	t.Run("Publish Schemata", func(t *testing.T) {
 		entry, _ := b.Publish(a)
 		assert.NotNil(t, entry)
+		println(entry.String())
 	})
 
 	t.Run("Deploy Chain", func(t *testing.T) {

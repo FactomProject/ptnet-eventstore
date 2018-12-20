@@ -5,6 +5,7 @@ import (
 	"github.com/FactomProject/ptnet-eventstore/blockchain"
 	"github.com/FactomProject/ptnet-eventstore/contract"
 	"github.com/FactomProject/ptnet-eventstore/identity"
+	"github.com/FactomProject/ptnet-eventstore/ptnet"
 	"github.com/FactomProject/ptnet-eventstore/x"
 	"github.com/stackdump/gopetri/statemachine"
 )
@@ -16,7 +17,7 @@ var NewBlockchain = blockchain.NewBlockchain
 
 
 var FROM = TO
-var Token0 = blockchain.Default
+var Token0 = ptnet.Default
 var IsHalted = contract.IsHalted
 
 func ID (extIDs ...string) string {
@@ -28,7 +29,7 @@ func ID (extIDs ...string) string {
 	return x.NewContractID(ext)
 }
 
-func TO (addr []byte, amt uint64, token blockchain.Color) contract.AddressAmountMap {
+func TO (addr []byte, amt uint64, token uint8) contract.AddressAmountMap {
 	return contract.AddressAmountMap{ Address: addr, Amount: amt, Token: uint8(token) }
 }
 
