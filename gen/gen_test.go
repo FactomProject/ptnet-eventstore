@@ -25,7 +25,6 @@ func TestGenerateStateMachines(t *testing.T) {
 	generate("../pnml/auction.xml", "AuctionV1", "auction.go")
 	generate("../pnml/spend.xml", "Spend", "spend.go")
 	generate("../pnml/tip.xml", "Tip", "tip.go")
-	return
 }
 
 func TestUsingGeneratedSource(t *testing.T) {
