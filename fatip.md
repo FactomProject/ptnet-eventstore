@@ -581,7 +581,8 @@ source: https://github.com/FactomProject/ptnet-eventstore/blob/master/contract/a
 
 #### auction state
 ![auction state machine without checks][auction3]
-This staet machine allows for a user to increase a bid amount in an effort to get another user to accept the contract offer.
+
+This state machine allows for a user to increase a bid amount in an effort to get another user to accept the contract offer.
 
 #### auction contract offer
 ![running auction state machine][auction3 running]
