@@ -6,17 +6,15 @@ Allow aggregation of contracts to calculate wallet balances by account.
 
 ### BACKLOG
 
-- [ ] demo smart contract protocol playback/validation
+- [ ] Demo how to calculate balance for tokens
 - [ ] Define Factom Asset Token FATIP spec for petri-nets
-      assets are considered locked when state machine begins and awarded on halt 
-- [ ] refactor 'finitie' transactions to avoid adding redundant sigs since that's what blockchains are for ;)
 
 ### COMPLETE
  
-- [x] update to work with factom connect or factomd to publish transactions
-- [x] run w/ fnode sim 
+- [x] work with factom connect or factomd to publish transactions
+- [x] run w/ fnode sim from factomd project
 - [x] refactor to use gopetri instead of ptnet everwhere - missing capacity check without this
-- [x] generate state machine code from pnml
+- [x] generates state machine code from pnml
 - [x] improve string output when printing data structures for examples in this project
 - [x] add gzip to payload data
 - [x] demo smart contract protocol creation
@@ -35,6 +33,8 @@ Allow aggregation of contracts to calculate wallet balances by account.
 
 ### ICEBOX
 
+- [ ] refactor 'finite' transactions to avoid adding redundant sigs since that's what blockchains are for ;)
+- [ ] demo smart contract protocol playback/validation
 - [ ] 'cache miss' should result when a state record is not found in memory when working w/ actual blockchain storage
 - [ ] signing/externalIDs - contracts should output an event as a valid factom entry
 - [ ] demo composing multiple state machines in a single contract

@@ -42,6 +42,32 @@ The intent is to introduce a standard for publishing information that is:
 * Contract behavior is modeled using Dual Petri Nets: https://en.wikipedia.org/wiki/Dualistic_Petri_nets
 * Formal theory provides an avenue to verify correctness of a contract: https://en.wikipedia.org/wiki/Curry%E2%80%93Howard_correspondence
 
+### State Machine / Contract Behavior
+
+The type of state machines being used here can be visually explained using Petri-Nets,
+but are expressed on-chain as [vector addition systems](https://en.wikipedia.org/wiki/Vector_addition_system).
+
+This basic behavior defines the 'executable' part of this specification.
+
+#### Halting State
+
+State machines can be easily analyzed to determine it it is 'Halted' or not -- simply put
+if there are no valid moves to be made this state machine is said to be in a halted state.
+
+As part of this standard any state machine based contract execution must be halted to indicate it has completed.
+As a rule, if a given contract instance is not halted before the specified block hight it is considered invalid.
+
+#### Additional Inhibitors and Checks
+
+On top of a standard Petri-net model - this design includes special guard and condition vectors that run 'on top' of an elementary state machine.
+These added checks allow for more complex rule sets to be composed from primitive operations.
+
+*Guards*: add a precondition check that is used to control what user is allowed to post the next entry to the contract.
+*Conditions*: output check called conditions control the release of tokens from the locked contract.
+
+All these rules combined serve as a generalized state protocol that can be used to extend the overall behavior of an token
+system without having to encode specific rules into a client-side/wallet application.
+
 ## Chain Registry 
 
 A Registry allows for initial creation & publication of a new blockchain spec.
@@ -180,7 +206,6 @@ There are 4 types of entries in this system:
 * Contract Execution - a transaction constructed to act upon a valid offer.
 * Commit - a transaction that does not require further interaction to be valid
 
-
      All entries must be signed.
      
      The signature on an offer Entry must match the input address of the Offer.
@@ -196,9 +221,25 @@ Then intent behind most of this protocol type metadata in ExtIDs is to allow add
 
 # Implementation
 
-Runs against an in-memory Factomd simulation.
+Code in this repo runs against an in-memory Factomd simulation.
+Some example data structures are provided below.
+
+NOTE: this is a draft - any part of this spec that can be amended to conform
+to other FAT specs should be amended.
 
 Proof-of-Concept (POC): https://github.com/FactomProject/ptnet-eventstore
+
+### Entry Format
+
+### Registry Chain
+
+### Offer Format
+
+### Case Study: Spend transaction
+
+### Case Study: Auction transaction
+
+### Case Study: Colored token tipping
 
 # Copyright
 
