@@ -1,5 +1,5 @@
-hash: e2d0762413a0f4a1edd4427159c34da2038cbd57ccdb19144169cc915aca10c2
-updated: 2018-12-13T15:03:26.364420526-06:00
+hash: 5a696e28ba8095225e0a07d83af0368abc20492886c9cedacf205db256e23877
+updated: 2019-01-02T10:47:34.262339234-06:00
 imports:
 - name: github.com/beorn7/perks
   version: 3a771d992973f24aa725d07868b467d1ddfceafb
@@ -176,12 +176,14 @@ imports:
 - name: github.com/sirupsen/logrus
   version: 680f584d621da87ee04ea659130e149ba9d23cae
 - name: github.com/stackdump/gopetri
-  version: def7d57b5b4a076c008aad6950ddaa164b5bfeb6
+  version: de8121427b7a7f3b17b5e3e11e397d5593bd4a91
   repo: git@github.com:stackdump/gopetri.git
   vcs: git
   subpackages:
   - pnml
   - statemachine
+- name: github.com/stackdump/graphml
+  version: 6d40272e8e4bd6fb551ac3d9d60135d7d2047521
 - name: github.com/stretchr/testify
   version: f35b8ab0b5a2cef36673838d662e249dd9c94686
   subpackages:

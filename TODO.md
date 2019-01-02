@@ -6,8 +6,9 @@ Allow aggregation of contracts to calculate wallet balances by account.
 
 ### BACKLOG
 
-- [ ] Demo how to calculate balance for tokens
 - [ ] Define Factom Asset Token FATIP spec for petri-nets
+- [ ] Demo how to calculate balance for tokens
+- [ ] add import/export of graphml test compatibility with gephi & networkx(python)
 
 ### COMPLETE
  
@@ -33,6 +34,7 @@ Allow aggregation of contracts to calculate wallet balances by account.
 
 ### ICEBOX
 
+- [ ] target chain - adopt FAT standard for choosing a chainid to store a given event
 - [ ] refactor 'finite' transactions to avoid adding redundant sigs since that's what blockchains are for ;)
 - [ ] demo smart contract protocol playback/validation
 - [ ] 'cache miss' should result when a state record is not found in memory when working w/ actual blockchain storage
