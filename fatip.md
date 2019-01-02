@@ -3,6 +3,38 @@
 | -     | Finite Protocol | WIP    | Protocol | Matt York \<<matt.york@factom.com>\> | 12-20-2018 |
 
 
+* [Summary](#summary)
+* [Motivation](#motivation)
+* [Specification](#specification) - introducing the protocol
+   * [Terms](#terms) - short dictionary of terms used in this spec
+   * [Reference](#reference) - wikipedia links to CompSci topics
+   * [Behavior](#state-machine--contract-behavior) - Primitive Operations
+     * [Halting State](#halting-state)
+     * [Guards and Conditions](#additional-inhibitors-and-checks)
+   * Finite Protocol - key aspects
+     * [Registry Chain](#chain-registry)
+     * [TokenID](#token-id)
+     * [Addresses](#addresses)
+     * [Issuance](#issuance)
+     * [State Machines](#state-machines)
+     * [Contracts](#contracts)
+     * [Roles and Checks](#roles-and-checks)
+     * [Guards](#guards)
+     * [Conditions](#conditions)
+     * [Transactions](#transactions)
+     * [Actions](#actions)
+     * [Witness Sequence](#witness-sequence)
+     * [Entry Validation](#entry-validation)
+     * [Payload](#content)
+* [Implementation](#implementation) - Data Structures & examples
+  * [Entries](#entry-format)
+  * [Offers](#offer-format)
+  * [Registry](#registry-chain)
+  * Use Cases
+    * [Spend](#use-case-token-spend) - simple token transfer
+    * [Auction](#use-case-auction) - conditional token transfer
+    * [Tip](#use-case-tracking-tips-with-colored-tokens) - accounting with colored tokens
+  
 
 # Summary
 
@@ -21,19 +53,18 @@ The intent is to introduce a standard for publishing information that is:
 3. Expressive without being Turing complete
 4. Extensible and Updatable using a systematic method of expressing behavior
 
-
 # Specification
 
 ## Terms
 
 * spec: may refer this document or a specific chain definition composed of contracts
-* blockchain schema: a specific datastucture that conforms to this document
+* blockchain schema: a specific data stucture that conforms to this document
 * registry: a chain that records chain definitions
 * state vector: the current state of a given contract
 * state machine: place-transition system allowing for deterministic or non-deterministic behavior
-* Petri-Net: visual form of the above type of state machine
+* Petri-Net: visual form of a place-transition style state machine
 * action: the human friendly name of a transition, also part of a state machine
-* witness sequence: an ordered set of transaction entries that 'execute' a contract on-chain
+* witness sequence: an ordered set of transaction entries that are said to 'execute' a contract on-chain
 
 ### Reference
 
@@ -126,7 +157,7 @@ An inductive definition for contract state:
     Current state is calculated by adding the transaction state vector
     to the output state from the most recent valid transition 
     
-    A state transition that contains a negative output value is considered invalid.
+    Any state transition that results in a vector containing a negative scalar output is considered invalid.
    
 For a contract that has defined input and output addresses, it is required for the public key signature to match the input address.
 * This could be extended to provide for multi-sig inputs, but currently that is not defined behavior.
@@ -144,6 +175,11 @@ Roles and Checks are evaluated with the same rules as State Machine actions, but
 
     A Role or Check is valid if it results in a valid output vector when added to current contract state
     
+* Example Use Cases
+    * [Spend](#use-case-token-spend) - unconditional transfer immediately halted
+    * [Auction](#use-case-auction)  - multi-step conditional transfer
+    * [Tip](#use-case-tracking-tips-with-colored-tokens) - unconditional transfer with multiple token colors
+    
 #### Guards
 
 Guards enforce Roles by comparing with input state of an open contact.
@@ -152,11 +188,17 @@ Guards enforce Roles by comparing with input state of an open contact.
 
 This allows for a contract author to limit interaction with the contract to a specific set of users.
 
+A guard is a vector transformation that works just like a Transition/Action, with the exception that the state of the contract is not mutated.
+
+Basic logic here is - when a guard is applied to contract state, it is considered valid if the output vector contains no negative numbers.
+
 #### Conditions
 
 Conditions add checks against the output state of a halted contract
 
     Conditions are state vectors used to determine which Output address should recieve tokens
+    
+Condition checks function just as guards do - except they are evaluated only after the contract is halted.
     
 ## Transactions
 
@@ -170,7 +212,7 @@ Contracts are not required to allow input or output tokens, and so may never hal
 
     A transaction terminates when it's underlying state machine is in a halted state.
     
-One part of the Transaction data structure includes the Input & Output state around the Action being executed:
+One part of the Transaction data structure optionally includes the Input & Output state around the Action being executed:
 
     A specified state vector input must match previous vector output,
     
@@ -195,9 +237,10 @@ By design, the first transaction that results in a hating state completes the co
 
 An additional consequence of this choice is that contract IDs must not be reused.
 
-Providing a witness sequence of on-chain entries is the only way to verify a transaction was executed.
+Providing a witness sequence of on-chain entries is the only way to verify a transaction was faithfully executed.
 
-FIXME add notes bout how a client would cache these event projections (as in keeping running balances)
+NOTE: Wallet like functionality (as in fatd) should be developed to calculate the current state of any given address
+that may contain tokens defined by the finite protocol.
 
 ### Entry Validation
 
@@ -214,12 +257,16 @@ There are 4 types of entries in this system:
      
      The signature of an execution Entry must match one of the output addresses
  
+ * [Entry Format](#entry-format)
+ * [Entry Validation](#entry-validation)
 
 ### Content
 
 Only Offer and Spec entries require attached of content - the json definition of the contract variables.
 
 Then intent behind most of this protocol type metadata in ExtIDs is to allow additional supporting data to be appended as part of a valid transaction.
+
+ * [Entry Content](#entry-format)
 
 # Implementation
 
@@ -425,13 +472,30 @@ Here's an example entry for a new chain containing use cases referenced in this 
 ### Use Case: Token Spend
 source: https://github.com/FactomProject/ptnet-eventstore/blob/master/contract/spend.go
 
+#### spend state
 ![spend state machine without checks][spend3]
+
+The essential state of a spend transaction is a single issued offer that is created
+in an 'already-halted' state.
+
+#### spend contract offer
 ![running spend state machine][spend3 running]
+
+To conform with the halting state rules of the protocol - an additional place called 'HALTED' is added.
+
+Notice above that if there were a token in the Halted position - the transaction would still be considered to be running.
+#### spend contract execution
 ![halted spend state machine][spend3 halted]
+
+By initializing the contract offer in the already-halted state, we achive a single-entry contract that requires no interaction by the receiving address to redeem.
 
 [spend3]: http://factomstatus.com/ptnet-eventstore/image/spend3.png "spend state machine without checks in halted position"
 [spend3 running]: http://factomstatus.com/ptnet-eventstore/image/spend3-running.png "spend state machine with checks in running position"
 [spend3 halted]: http://factomstatus.com/ptnet-eventstore/image/spend3-halted.png "spend state machine with checks in halted position"
+
+#### spend state machine code
+
+The Petri-Nets above are used to generate the code below.
 
 ```go
 var Spend PetriNet = PetriNet{
@@ -453,6 +517,10 @@ var Spend PetriNet = PetriNet{
 }
 ```
 
+#### spend state machine contract
+
+When a contract is instantiated - variables are provided to create a transaction.
+
 ```go
 func SpendContract() Declaration {
 	d := SpendTemplate()
@@ -473,6 +541,10 @@ func SpendContract() Declaration {
 }
 
 ```
+
+#### spend state machine template
+
+The underlying state machine, Guards, and Conditions are all consider 'invariants' and are ultimately defined be the chain's registry entry.
 
 ```go
 func SpendTemplate() Declaration {
@@ -503,14 +575,29 @@ func SpendTemplate() Declaration {
 ### Use Case: Auction
 source: https://github.com/FactomProject/ptnet-eventstore/blob/master/contract/auction.go
 
-![auction state machine without checks][auction3]
-![running auction state machine][auction3 running]
-![halted auction state machine][auction3 halted]
-
 [auction3]: http://factomstatus.com/ptnet-eventstore/image/auction3.png "auction state machine without checks in halted position"
 [auction3 running]: http://factomstatus.com/ptnet-eventstore/image/auction3-running.png "auction state machine with checks in running position"
 [auction3 halted]: http://factomstatus.com/ptnet-eventstore/image/auction3-halted.png "auction state machine with checks in halted position"
 
+#### auction state
+![auction state machine without checks][auction3]
+This staet machine allows for a user to increase a bid amount in an effort to get another user to accept the contract offer.
+
+#### auction contract offer
+![running auction state machine][auction3 running]
+
+Notice the `?2` label represents a check - this is different from the Spend transaction because it is created in the 'running' state.
+
+This indicates that additional inputs are expected to drive the contract to a halted state.
+
+#### auction contract execution
+![halted auction state machine][auction3 halted]
+
+Above we see the completed contract, notice the `?0` label is marking a Condition indicating that the bid has been accepted by the user looking to sell tokens.
+
+#### auction state machine code
+
+The state machine below is generated from the Petri-Net definitions above.
 ```go
 var AuctionV1 PetriNet = PetriNet{
 	Places: map[string]Place { 
@@ -549,16 +636,21 @@ var AuctionV1 PetriNet = PetriNet{
 }
 ```
 
+#### auction state machine contract
+
+The state machine is reference by the contract when an offer is issued.
+Notice that in the example below - the 'Color' of the token is provided as part of input.
+
 ```go
 func AuctionContract() Declaration {
 	d := AuctionTemplate()
 
 	d.Inputs = []AddressAmountMap{ // array of input depositors
-		AddressAmountMap{Address[DEPOSITOR], 1, ptnet.Coin}, // deposit tokens
+		AddressAmountMap{Address[DEPOSITOR], 1, ptnet.Coin}, // deposit tokens quantity
 	}
 
 	d.Outputs = []AddressAmountMap{
-		AddressAmountMap{Address[DEPOSITOR], 1, ptnet.Coin}, // withdraw token
+		AddressAmountMap{Address[DEPOSITOR], 1, ptnet.Coin}, // withdraw token deposit back to original owner (no sale)
 		AddressAmountMap{Address[USER1], 1, ptnet.Coin},     // deposit to user1
 	}
 
@@ -571,12 +663,20 @@ func AuctionContract() Declaration {
 	return d
 }
 ```
+
+Currently this example isn't very interesting as the user is bidding using ptnet.Coins to win ptent.Coins.
+More likely this use case would be used to swap one token type for another.
+
+#### auction state machine template
+
+The underlying state machine, Guards, and Conditions are all consider 'invariants' and are ultimately defined be the chain's registry entry.
+
 ```go
 func AuctionTemplate() Declaration {
 	return Declaration{
 		Variables: Variables{
 			ContractID:  x.NewContractID(x.Ext(ptnet.AuctionV1, "|SALT|")),
-			BlockHeight: 0, // deadline for halting state 0 = never
+			BlockHeight: 0, // deadline for halting state 0 = always/never
 			Inputs:      []AddressAmountMap{},
 			Outputs:     []AddressAmountMap{},
 		},
@@ -602,16 +702,30 @@ func AuctionTemplate() Declaration {
 ### Use Case: tracking tips with Colored Tokens
 source: https://github.com/FactomProject/ptnet-eventstore/blob/master/contract/tip.go
 
-![tip state machine without checks][tip3]
-![running tip state machine][tip3 running]
-![halted tip state machine][tip3 halted]
-
 [tip3]: http://factomstatus.com/ptnet-eventstore/image/tip3.png "tip state machine without checks in halted position"
 [tip3 running]: http://factomstatus.com/ptnet-eventstore/image/tip3-running.png "tip state machine with checks in running position"
 [tip3 halted]: http://factomstatus.com/ptnet-eventstore/image/tip3-halted.png "tip state machine with checks in halted position"
 
-```go
+#### tip state machine
+![tip state machine without checks][tip3]
 
+See above: the underyling state works just as in the [spend state](#spend-state)
+
+This is a 1-way transaction that does not require additional interaction beyond the contract offer.
+
+#### tip state machine offer
+![running tip state machine][tip3 running]
+
+Comparing the diagrams above and below - notice how the `?0` label indicates that the guard is testing for halting state.
+#### tip state machine execution
+![halted tip state machine][tip3 halted]
+
+When halted the `?1` and `?2` Conditions are then evalutated to determine which address has unlocked the deposited tokens.
+
+#### tip state machine code
+The code below is gerated from the Petri-Net shown above.
+
+```go
 var Tip PetriNet = PetriNet{
 	Places: map[string]Place { 
 		"ANTIKARMA": Place{
@@ -647,6 +761,39 @@ var Tip PetriNet = PetriNet{
 }
 ```
 
+
+#### tip state machine contract
+
+The state machine code is referenced by the contract offer when it is created.
+
+```go
+func TipContract() Declaration {
+	d := OptionTemplate()
+
+	d.Inputs = []AddressAmountMap{ // array of input depositors
+		AddressAmountMap{Address[DEPOSITOR], 1, ptnet.Coin}, // deposit tokens
+	}
+
+	d.Outputs = []AddressAmountMap{ // User1 withdraws all tokens
+		AddressAmountMap{Address[USER1], 1, ptnet.Coin},     // deposit to user1
+		AddressAmountMap{Address[USER2], 1, ptnet.Coin},     // deposit to another charity (anyone but user1)
+		AddressAmountMap{Address[USER1], 1, ptnet.Karma},     // deposit to user1
+		AddressAmountMap{Address[USER1], 1, ptnet.AntiKarma},     // deposit to user1
+	}
+
+	d.BlockHeight = 60221409 // deadline for halting state
+
+	sig, _ := json.Marshal(d.Variables)
+	extids := append(x.Ext(ptnet.Tip), sig)
+	d.ContractID = x.NewContractID(extids)
+
+	return d
+}
+```
+
+#### tip state machine template
+The underlying state machine, Guards, and Conditions are all consider 'invariants' and are ultimately defined be the chain's registry entry.
+
 ```go
 func TipTemplate() Declaration {
 	return Declaration{
@@ -673,31 +820,6 @@ func TipTemplate() Declaration {
 			},
 		},
 	}
-}
-```
-
-```go
-func TipContract() Declaration {
-	d := OptionTemplate()
-
-	d.Inputs = []AddressAmountMap{ // array of input depositors
-		AddressAmountMap{Address[DEPOSITOR], 1, ptnet.Coin}, // deposit tokens
-	}
-
-	d.Outputs = []AddressAmountMap{ // User1 withdraws all tokens
-		AddressAmountMap{Address[USER1], 1, ptnet.Coin},     // deposit to user1
-		AddressAmountMap{Address[USER2], 1, ptnet.Coin},     // deposit to another charity (anyone but user1)
-		AddressAmountMap{Address[USER1], 1, ptnet.Karma},     // deposit to user1
-		AddressAmountMap{Address[USER1], 1, ptnet.AntiKarma},     // deposit to user1
-	}
-
-	d.BlockHeight = 60221409 // deadline for halting state
-
-	sig, _ := json.Marshal(d.Variables)
-	extids := append(x.Ext(ptnet.Tip), sig)
-	d.ContractID = x.NewContractID(extids)
-
-	return d
 }
 ```
 
