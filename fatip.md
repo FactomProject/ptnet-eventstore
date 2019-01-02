@@ -195,7 +195,9 @@ By design, the first transaction that results in a hating state completes the co
 
 An additional consequence of this choice is that contract IDs must not be reused.
 
-Providing a witness sequence of related on chain entries is the only way to verify a transaction was executed.
+Providing a witness sequence of on-chain entries is the only way to verify a transaction was executed.
+
+FIXME add notes bout how a client would cache these event projections (as in keeping running balances)
 
 ### Entry Validation
 
@@ -230,16 +232,474 @@ to other FAT specs should be amended.
 Proof-of-Concept (POC): https://github.com/FactomProject/ptnet-eventstore
 
 ### Entry Format
-
-### Registry Chain
+FIXME: add auction example
 
 ### Offer Format
 
-### Case Study: Spend transaction
+FIXME: add auction example
 
-### Case Study: Auction transaction
+```json
+EntryHash: 387e8921ac629e8e35bfba28be6637097596fce628181363f340d8f9ee166b09
+ChainID: cd4b3c137f353a9682c9e017f7eae6b205b5478bfd2794a7447bde96b686a7dc
+ExtID: Spend // contract schema
+ExtID: EXEC // action
+ExtID: 395d3030f7f471b2c7f8783efa57b884181493abfc2c52d5f5842b72efb78526 // contractID
+ExtID: 3  // multiplier - trigger transfer 3x
+ExtID: [0,0] //input state (optional)
+ExtID: [3,0] // output state (optional)
+ExtID: c04c1cd15ba4581ee677232cd7a2726f9bf73a8f6f5bc7d64970074d76e64f9f
+ExtID: da5dd59d59cf320b7a89cd0e474e2e7787903daff93d7372a0a23a9d3733594ccaaace55d6cdf4f03c74481f8408aa55f4159c302e423c5b725964264ae9ad08
+Content: // payload - required for 'EXEC' - but other subsequent 'action' entries can optionally include additional data or nothing
+{"contractid":"395d3030f7f471b2c7f8783efa57b884181493abfc2c52d5f5842b72efb78526","blockheight":0,
+"inputs":[{"address":"Ayb3xCM4BVP3Cw0ob+bBf6KbFc9Ojm5uAp7BzvO98U0=","amount":1,"color":1}],
+"outputs":[{"address":"cRQW+RoDrfgKLhpaL4n7r0WlxICDOhbcEJC5Sxg4yMA=","amount":1,"color":1}]}
+```
 
-### Case Study: Colored token tipping
+### Registry Chain
+
+Here's an example entry for a new chain containing use cases referenced in this document.
+
+```json
+{
+    "chainid": "cd4b3c137f353a9682c9e017f7eae6b205b5478bfd2794a7447bde96b686a7dc",
+    "contracts": {
+        "FiniteV1": {
+            "schema": "FiniteV1",
+            "template": {
+                "actions": {
+                    "DISABLE": [ -1, 0, 1 ],
+                    "ENABLE": [ 1, 0, -1 ],
+                    "EXEC": [ 0, 1, 0 ]
+                },
+                "blockheight": 0,
+                "capacity": [ 0, 0, 0 ],
+                "conditions": null,
+                "contractid": "46050f96e9197f332c94effdbf921d7ec79cca55f0dae0f28aa0d677aa578b42",
+                "guards": null,
+                "inputs": null,
+                "outputs": null,
+                "parameters": {
+                    "active": {
+                        "capacity": 0,
+                        "initial": 1,
+                        "offset": 0
+                    },
+                    "edits": {
+                        "capacity": 0,
+                        "initial": 0,
+                        "offset": 1
+                    },
+                    "inactive": {
+                        "capacity": 0,
+                        "initial": 0,
+                        "offset": 2
+                    }
+                },
+                "schema": "FiniteV1",
+                "state": [ 1, 0, 0 ]
+            }
+        },
+        "Spend": {
+            "schema": "Spend",
+            "template": {
+                "actions": {
+                    "EXEC": [ 1, 0 ]
+                },
+                "blockheight": 0,
+                "capacity": [ 0, 1 ],
+                "conditions": [
+                    [
+                        -1,
+                        0
+                    ]
+                ],
+                "contractid": "72fdd6e42898ac04f037e161e0c28f47ffd5675718e4f986715cf9232fac16a9",
+                "guards": [
+                    [ 0, -1 ]
+                ],
+                "inputs": [],
+                "outputs": [],
+                "parameters": {
+                    "HALTED": {
+                        "capacity": 1,
+                        "initial": 0,
+                        "offset": 1
+                    },
+                    "PAYMENT": {
+                        "capacity": 0,
+                        "initial": 0,
+                        "offset": 0
+                    }
+                },
+                "schema": "Spend",
+                "state": [ 0, 0 ]
+            }
+        },
+        "AuctionV1": {
+            "schema": "AuctionV1",
+            "template": {
+                "actions": {
+                    "EXEC": [ 1, 0 ]
+                },
+                "blockheight": 0,
+                "capacity": [ 0, 1 ],
+                "conditions": [
+                    [ -1, 0 ]
+                ],
+                "contractid": "72fdd6e42898ac04f037e161e0c28f47ffd5675718e4f986715cf9232fac16a9",
+                "guards": [
+                    [ 0, -1 ]
+                ],
+                "inputs": [],
+                "outputs": [],
+                "parameters": {
+                    "HALTED": {
+                        "capacity": 1,
+                        "initial": 0,
+                        "offset": 1
+                    },
+                    "PAYMENT": {
+                        "capacity": 0,
+                        "initial": 0,
+                        "offset": 0
+                    }
+                },
+                "schema": "Spend",
+                "state": [ 0, 0 ]
+            }
+        },
+        "Tip": {
+            "schema": "Tip",
+            "template": {
+                "actions": {
+                    "EXEC": [ 1, 0 ]
+                },
+                "blockheight": 0,
+                "capacity": [ 0, 1 ],
+                "conditions": [
+                    [ -1, 0 ]
+                ],
+                "contractid": "72fdd6e42898ac04f037e161e0c28f47ffd5675718e4f986715cf9232fac16a9",
+                "guards": [
+                    [ 0, -1 ]
+                ],
+                "inputs": [],
+                "outputs": [],
+                "parameters": {
+                    "HALTED": {
+                        "capacity": 1,
+                        "initial": 0,
+                        "offset": 1
+                    },
+                    "PAYMENT": {
+                        "capacity": 0,
+                        "initial": 0,
+                        "offset": 0
+                    }
+                },
+                "schema": "Spend",
+                "state": [ 0, 0 ]
+            }
+        }
+    },
+    "extids": [
+        "U3BlbmRDaGFpbg=="
+    ],
+    "tokens": [
+        {
+            "Color": 0
+        },
+        {
+            "Color": 1
+        },
+        {
+            "Color": 2
+        },
+        {
+            "Color": 3
+        }
+    ]
+}
+```
+
+### Use Case: Token Spend
+source: https://github.com/FactomProject/ptnet-eventstore/blob/master/contract/spend.go
+
+![spend state machine without checks][spend3]
+![running spend state machine][spend3 running]
+![halted spend state machine][spend3 halted]
+
+[spend3]: http://factomstatus.com/ptnet-eventstore/image/spend3.png "spend state machine without checks in halted position"
+[spend3 running]: http://factomstatus.com/ptnet-eventstore/image/spend3-running.png "spend state machine with checks in running position"
+[spend3 halted]: http://factomstatus.com/ptnet-eventstore/image/spend3-halted.png "spend state machine with checks in halted position"
+
+```go
+var Spend PetriNet = PetriNet{
+	Places: map[string]Place { 
+		"HALTED": Place{
+				Initial: 0,
+				Offset: 1,
+				Capacity: 1,
+		},
+		"PAYMENT": Place{
+				Initial: 0,
+				Offset: 0,
+				Capacity: 0,
+		},
+	},
+	Transitions: map[Action]Transition { 
+		"EXEC": Transition{ 1,0 },
+	},
+}
+```
+
+```go
+func SpendContract() Declaration {
+	d := SpendTemplate()
+
+	d.Inputs = []AddressAmountMap{ // array of input depositors
+		AddressAmountMap{Address[USER1], 1, 0}, // deposit tokens
+	}
+
+	d.Outputs = []AddressAmountMap{
+		AddressAmountMap{Address[USER2], 1, 0}, // deposit to user1
+	}
+
+	sig, _ := json.Marshal(d.Variables)
+	extids := append(x.Ext(ptnet.Spend), sig)
+	d.ContractID = x.NewContractID(extids)
+
+	return d
+}
+
+```
+
+```go
+func SpendTemplate() Declaration {
+	return Declaration{
+		Variables: Variables{
+			ContractID:  x.NewContractID(x.Ext(ptnet.Spend, "|SALT|")),
+			BlockHeight: 0, // deadline for halting state 0 = never
+			Inputs:      []AddressAmountMap{},
+			Outputs:     []AddressAmountMap{},
+		},
+		Invariants: Invariants{
+			Schema:     ptnet.Spend,
+			Parameters: gen.Spend.Places,
+			Capacity:   gen.Spend.GetCapacityVector(),
+			State:      gen.Spend.GetInitialState(),
+			Actions:    gen.Spend.Transitions,
+			Guards: []Condition{ // guard clause restricts actions
+				Role(gen.Spend, []string{"HALTED"}, 1),
+			},
+			Conditions: []Condition{ // contract conditions specify additional redeem conditions
+				Check(gen.Spend, []string{"PAYMENT"}, 1),
+			},
+		},
+	}
+}
+```
+
+### Use Case: Auction
+source: https://github.com/FactomProject/ptnet-eventstore/blob/master/contract/auction.go
+
+![auction state machine without checks][auction3]
+![running auction state machine][auction3 running]
+![halted auction state machine][auction3 halted]
+
+[auction3]: http://factomstatus.com/ptnet-eventstore/image/auction3.png "auction state machine without checks in halted position"
+[auction3 running]: http://factomstatus.com/ptnet-eventstore/image/auction3-running.png "auction state machine with checks in running position"
+[auction3 halted]: http://factomstatus.com/ptnet-eventstore/image/auction3-halted.png "auction state machine with checks in halted position"
+
+```go
+var AuctionV1 PetriNet = PetriNet{
+	Places: map[string]Place { 
+		"ACCEPTED": Place{
+				Initial: 0,
+				Offset: 0,
+				Capacity: 1,
+		},
+		"NEW": Place{
+				Initial: 1,
+				Offset: 1,
+				Capacity: 1,
+		},
+		"OPEN": Place{
+				Initial: 0,
+				Offset: 2,
+				Capacity: 1,
+		},
+		"PRICE": Place{
+				Initial: 0,
+				Offset: 3,
+				Capacity: 0,
+		},
+		"REJECTED": Place{
+				Initial: 0,
+				Offset: 4,
+				Capacity: 1,
+		},
+	},
+	Transitions: map[Action]Transition { 
+		"BID": Transition{ 0,0,0,1,0 },
+		"EXEC": Transition{ 0,-1,1,0,0 },
+		"HALT": Transition{ 0,0,-1,0,1 },
+		"SOLD": Transition{ 1,0,-1,0,0 },
+	},
+}
+```
+
+```go
+func AuctionContract() Declaration {
+	d := AuctionTemplate()
+
+	d.Inputs = []AddressAmountMap{ // array of input depositors
+		AddressAmountMap{Address[DEPOSITOR], 1, ptnet.Coin}, // deposit tokens
+	}
+
+	d.Outputs = []AddressAmountMap{
+		AddressAmountMap{Address[DEPOSITOR], 1, ptnet.Coin}, // withdraw token
+		AddressAmountMap{Address[USER1], 1, ptnet.Coin},     // deposit to user1
+	}
+
+	d.BlockHeight = 60221409 // deadline for halting state
+
+	sig, _ := json.Marshal(d.Variables)
+	extids := append(x.Ext(ptnet.AuctionV1), sig)
+	d.ContractID = x.NewContractID(extids)
+
+	return d
+}
+```
+```go
+func AuctionTemplate() Declaration {
+	return Declaration{
+		Variables: Variables{
+			ContractID:  x.NewContractID(x.Ext(ptnet.AuctionV1, "|SALT|")),
+			BlockHeight: 0, // deadline for halting state 0 = never
+			Inputs:      []AddressAmountMap{},
+			Outputs:     []AddressAmountMap{},
+		},
+		Invariants: Invariants{
+			Schema:     ptnet.AuctionV1,
+			Parameters: gen.AuctionV1.Places,
+			Capacity:   gen.AuctionV1.GetCapacityVector(),
+			State:      gen.AuctionV1.GetInitialState(),
+			Actions:    gen.AuctionV1.Transitions,
+			Guards: []Condition{ // guard clause restricts actions
+				Role(gen.AuctionV1, []string{"OPEN", "PRICE"}, 1),
+				Role(gen.AuctionV1, []string{"OPEN"}, 1),
+			},
+			Conditions: []Condition{ // contract conditions specify additional redeem conditions
+				Check(gen.AuctionV1, []string{"REJECTED"}, 1),
+				Check(gen.AuctionV1, []string{"ACCEPTED"}, 1),
+			},
+		},
+	}
+}
+```
+
+### Use Case: tracking tips with Colored Tokens
+source: https://github.com/FactomProject/ptnet-eventstore/blob/master/contract/tip.go
+
+![tip state machine without checks][tip3]
+![running tip state machine][tip3 running]
+![halted tip state machine][tip3 halted]
+
+[tip3]: http://factomstatus.com/ptnet-eventstore/image/tip3.png "tip state machine without checks in halted position"
+[tip3 running]: http://factomstatus.com/ptnet-eventstore/image/tip3-running.png "tip state machine with checks in running position"
+[tip3 halted]: http://factomstatus.com/ptnet-eventstore/image/tip3-halted.png "tip state machine with checks in halted position"
+
+```go
+
+var Tip PetriNet = PetriNet{
+	Places: map[string]Place { 
+		"ANTIKARMA": Place{
+				Initial: 0,
+				Offset: 0,
+				Capacity: 0,
+		},
+		"CHARITY": Place{
+				Initial: 0,
+				Offset: 1,
+				Capacity: 0,
+		},
+		"HALTED": Place{
+				Initial: 0,
+				Offset: 2,
+				Capacity: 0,
+		},
+		"KARMA": Place{
+				Initial: 0,
+				Offset: 3,
+				Capacity: 0,
+		},
+		"PAYMENT": Place{
+				Initial: 0,
+				Offset: 4,
+				Capacity: 0,
+		},
+	},
+	Transitions: map[Action]Transition { 
+		"TIP": Transition{ 0,0,0,1,1 },
+		"WARN": Transition{ 1,1,0,0,0 },
+	},
+}
+```
+
+```go
+func TipTemplate() Declaration {
+	return Declaration{
+		Variables: Variables{
+			ContractID:  x.NewContractID(x.Ext(ptnet.Tip, "|SALT|")),
+			BlockHeight: 0, // deadline for halting state 0 = never
+			Inputs:      []AddressAmountMap{},
+			Outputs:     []AddressAmountMap{},
+		},
+		Invariants: Invariants{
+			Schema:     ptnet.Tip,
+			Parameters: gen.Tip.Places,
+			Capacity:   gen.Tip.GetCapacityVector(),
+			State:      gen.Tip.GetInitialState(),
+			Actions:    gen.Tip.Transitions,
+			Guards: []Condition{ // guard clause restricts actions
+				Role(gen.Tip, []string{"HALTED"}, 1), // created in a halted state
+			},
+			Conditions: []Condition{ // contract conditions specify additional redeem conditions
+				Check(gen.Tip, []string{"PAYMENT"}, 1),
+				Check(gen.Tip, []string{"CHARITY"}, 1),
+				Check(gen.Tip, []string{"KARMA"}, 1),
+				Check(gen.Tip, []string{"ANTIKARMA"}, 1),
+			},
+		},
+	}
+}
+```
+
+```go
+func TipContract() Declaration {
+	d := OptionTemplate()
+
+	d.Inputs = []AddressAmountMap{ // array of input depositors
+		AddressAmountMap{Address[DEPOSITOR], 1, ptnet.Coin}, // deposit tokens
+	}
+
+	d.Outputs = []AddressAmountMap{ // User1 withdraws all tokens
+		AddressAmountMap{Address[USER1], 1, ptnet.Coin},     // deposit to user1
+		AddressAmountMap{Address[USER2], 1, ptnet.Coin},     // deposit to another charity (anyone but user1)
+		AddressAmountMap{Address[USER1], 1, ptnet.Karma},     // deposit to user1
+		AddressAmountMap{Address[USER1], 1, ptnet.AntiKarma},     // deposit to user1
+	}
+
+	d.BlockHeight = 60221409 // deadline for halting state
+
+	sig, _ := json.Marshal(d.Variables)
+	extids := append(x.Ext(ptnet.Tip), sig)
+	d.ContractID = x.NewContractID(extids)
+
+	return d
+}
+```
 
 # Copyright
 
