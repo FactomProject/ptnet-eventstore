@@ -19,7 +19,7 @@ The intent is to introduce a standard for publishing information that is:
 1. Verifiable while only having access to on-chain data
 2. Constructed using well explored math and computer science theory
 3. Expressive without being Turing complete
-4. Extensible and Updatable using systematic method of expressing behavior
+4. Extensible and Updatable using a systematic method of expressing behavior
 
 
 # Specification
