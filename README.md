@@ -8,6 +8,8 @@ Uses Petri-Nets as state machines to validate events before appending to a event
 
 ## Status
 
+[![CircleCI](https://circleci.com/gh/FactomProject/ptnet-eventstore.svg?style=svg)](https://circleci.com/gh/FactomProject/ptnet-eventstore)
+
 Pre-Alpha - Seems to function in a development environment
 
 Not tested under load.
@@ -17,7 +19,7 @@ Not tested under load.
 The Ultimate aim is to develop a datastore
 that maps onto the smart contract platform provided by https://github.com/Factom-Asset-Tokens
 
-Read the FATIP - draft specification [./fatip.md](./fatiop.md) # <- TODO rewrite to target latest SmartContract design
+Read the FATIP - draft specification [./fatip.md](./fatip.md) # <- TODO rewrite to target latest SmartContract design
 
 ## Why use this library?
 

@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/FactomProject/finite/event"
-	pb "github.com/FactomProject/finite/finite"
+	"github.com/FactomProject/ptnet-eventstore/event"
+	pb "github.com/FactomProject/ptnet-eventstore/finite"
 	"google.golang.org/grpc"
 	"log"
 )
@@ -15,7 +15,7 @@ func TestClient() *client {
 }
 
 func NewClient(address string) *client {
-	return &client{ pbClient(address, "finite") }
+	return &client{pbClient(address, "finite")}
 }
 
 func pbClient(address string, name string) pb.EventStoreClient {
@@ -36,12 +36,12 @@ func (c *client) Dispatch(ctx context.Context, schema string, id string, action 
 	status, err := c.EventStoreClient.Dispatch(
 		ctx,
 		&pb.Command{
-			Schema: schema,
-			Id: id,
-			Action: action,
+			Schema:   schema,
+			Id:       id,
+			Action:   action,
 			Multiple: multiple,
-			Payload: j,
-			State: state,
+			Payload:  j,
+			State:    state,
 		})
 	if err == nil && status.Code != 0 {
 		return status.State, errors.New(status.Message)
@@ -50,13 +50,13 @@ func (c *client) Dispatch(ctx context.Context, schema string, id string, action 
 	}
 }
 
-func (c *client) GetState(ctx context.Context, schema string, id string, uuid string) ([]*pb.State, error){
+func (c *client) GetState(ctx context.Context, schema string, id string, uuid string) ([]*pb.State, error) {
 	stateList, err := c.EventStoreClient.GetState(
 		ctx,
 		&pb.Query{
 			Schema: schema,
-			Id: id,
-			Uuid: uuid,
+			Id:     id,
+			Uuid:   uuid,
 		})
 
 	return stateList.List, err
@@ -68,29 +68,29 @@ func (c *client) GetEvent(ctx context.Context, schema string, id string, uuid st
 		ctx,
 		&pb.Query{
 			Schema: schema,
-			Id: id,
-			Uuid: uuid,
+			Id:     id,
+			Uuid:   uuid,
 		})
 
 	return eventList.List, err
 }
 
 func (c *client) GetMachine(ctx context.Context, schema string, id string, uuid string) (*pb.Machine, error) {
-	_ = id // REVIEW: unsure if oid/state_id is ever useful but wanted to keep same Query param
+	_ = id   // REVIEW: unsure if oid/state_id is ever useful but wanted to keep same Query param
 	_ = uuid // REVIEW: if machines are ever versioned use old event uuid to get the valid historical version
 
 	return c.EventStoreClient.GetMachine(
 		ctx,
 		&pb.Query{
 			Schema: schema,
-			Id: id,
-			Uuid: uuid,
+			Id:     id,
+			Uuid:   uuid,
 		})
 }
 
 func (c *client) Ping(ctx context.Context) (ok bool) {
 	nonce := event.NewUuid().String()
-	pong, err := c.EventStoreClient.Status(ctx, &pb.Ping{Nonce: nonce} )
+	pong, err := c.EventStoreClient.Status(ctx, &pb.Ping{Nonce: nonce})
 
 	if err == nil && pong.Nonce == nonce {
 		return true
@@ -100,9 +100,9 @@ func (c *client) Ping(ctx context.Context) (ok bool) {
 
 }
 
-func (c *client) ListMachines(ctx context.Context) ( []string, error) {
+func (c *client) ListMachines(ctx context.Context) ([]string, error) {
 
-	ml, err :=  c.EventStoreClient.ListMachines(ctx, &pb.MachineQuery{})
+	ml, err := c.EventStoreClient.ListMachines(ctx, &pb.MachineQuery{})
 	if err != nil {
 		panic(err)
 	}

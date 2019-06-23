@@ -21,7 +21,11 @@ func NewEventStore() (es *EventStore) {
 }
 
 func (es *EventStore) Migrate() {
-	tx, _ := es.db.Begin()
+	tx, err := es.db.Begin()
+
+	if err != nil {
+		panic(err)
+	}
 
 	for schema := range es.m {
 		storage.Migrate(tx, schema)

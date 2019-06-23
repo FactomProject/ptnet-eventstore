@@ -1,4 +1,4 @@
 .idea
 vendor
-finite
-*-data
+postgres-data
+ptneteventstore

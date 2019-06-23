@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/FactomProject/finite/api"
+	"github.com/FactomProject/ptnet-eventstore/api"
 )
 
 func main() {

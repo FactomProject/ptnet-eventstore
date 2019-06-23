@@ -3,13 +3,13 @@ package api_test
 import (
 	"context"
 	"encoding/json"
-	"github.com/FactomProject/finite/event"
+	"github.com/FactomProject/ptnet-eventstore/event"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/FactomProject/finite/api"
+	"github.com/FactomProject/ptnet-eventstore/api"
 )
 
 var ctx, _ = context.WithTimeout(context.Background(), time.Second)
@@ -31,12 +31,12 @@ func TestCounterEvents(t *testing.T) {
 	oid := event.NewUuid().String()
 	schema := "counter"
 
-	commit := func (action string, multiple int, testFail bool) { // dispatch command
-		s, err := c.Dispatch( ctx, schema, oid, action, uint64(multiple), map[string]string{"foo": "bar"}, []uint64{}, )
+	commit := func(action string, multiple int, testFail bool) { // dispatch command
+		s, err := c.Dispatch(ctx, schema, oid, action, uint64(multiple), map[string]string{"foo": "bar"}, []uint64{})
 
 		if s == nil || err != nil && testFail != true {
-				t.Fatalf("API call failed %v", err)
-			    t.Logf("FAIL: %v, %v, %v, %v, %v ,%v", s.Id, s.Schema, s.Head, s.State, s.Updated, s.Created)
+			t.Fatalf("API call failed %v", err)
+			t.Logf("FAIL: %v, %v, %v, %v, %v ,%v", s.Id, s.Schema, s.Head, s.State, s.Updated, s.Created)
 		} else {
 			if err != nil {
 				t.Logf("ROLLBACK: %s", err)
@@ -46,17 +46,17 @@ func TestCounterEvents(t *testing.T) {
 		}
 	}
 
-	xPass := func (action string, multiple int) { // dispatch command
+	xPass := func(action string, multiple int) { // dispatch command
 		commit(action, multiple, false)
 	}
 
-	xFail := func (action string, multiple int) { // dispatch command
+	xFail := func(action string, multiple int) { // dispatch command
 		commit(action, multiple, true)
 	}
 
 	ping := func() {
 		ok := c.Ping(ctx)
-		if ! ok {
+		if !ok {
 			t.Fatal("Failed to ping server")
 		}
 	}
@@ -64,7 +64,9 @@ func TestCounterEvents(t *testing.T) {
 	state := func() {
 		s, err := c.GetState(ctx, schema, oid, "")
 
-		if s == nil || err != nil { t.Fatalf("API call failed %v", err) }
+		if s == nil || err != nil {
+			t.Fatalf("API call failed %v", err)
+		}
 
 		for _, state := range s {
 			t.Logf("state: %v, %v, %v, %v", state.Schema, state.Id, state.Head, state.State)
@@ -74,7 +76,9 @@ func TestCounterEvents(t *testing.T) {
 	event := func() {
 		el, err := c.GetEvent(ctx, schema, oid, "")
 
-		if el == nil || err != nil { t.Fatalf("API call failed %v", err) }
+		if el == nil || err != nil {
+			t.Fatalf("API call failed %v", err)
+		}
 
 		for _, e := range el {
 			t.Logf("evt: %v, %v, %v, %v, %v ", e.Id, e.Schema, e.Uuid, e.State, e.Parent)
@@ -84,7 +88,9 @@ func TestCounterEvents(t *testing.T) {
 	machine := func(schema string) {
 		s, err := c.GetMachine(ctx, schema, oid, "")
 
-		if s == nil || err != nil { t.Fatalf("API call failed %v", err) }
+		if s == nil || err != nil {
+			t.Fatalf("API call failed %v", err)
+		}
 
 		j, _ := json.Marshal(s)
 		t.Logf("machine: %s\n", j)
@@ -93,7 +99,9 @@ func TestCounterEvents(t *testing.T) {
 	machines := func() {
 		s, err := c.ListMachines(ctx)
 
-		if s == nil || err != nil { t.Fatalf("API call failed %v", err) }
+		if s == nil || err != nil {
+			t.Fatalf("API call failed %v", err)
+		}
 
 		j, _ := json.Marshal(s)
 		t.Logf("machines: %s\n", j)

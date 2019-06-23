@@ -1,0 +1,69 @@
+version: 2
+
+jobs:
+
+  build:
+    working_directory: "/go/src/github.com/FactomProject/ptnet-eventstore"
+    docker:
+      - image: circleci/golang:1.12
+
+    steps:
+      - checkout
+
+      - run:
+          name: Get the dependencies
+          command: |
+            go mod download && \
+            go build -o ptneteventstore ./main.go && \
+            cp -r $GOPATH/ /tmp
+          environment:
+            GO111MODULE: "on"
+
+      - persist_to_workspace:
+          root: /tmp
+          paths: go
+
+  test:
+    working_directory: "/go/src/github.com/FactomProject/ptnet-eventstore"
+    docker:
+      - image: circleci/golang:1.12
+
+      - image: circleci/postgres:11.1
+        environment:
+          POSTGRES_USER: pflow
+          POSTGRES_PASSWORD: pflow
+          POSTGRES_DB: pflow
+
+    steps:
+      - attach_workspace:
+          at: /tmp
+
+      - run:
+          name: Run Tests!
+          no_output_timeout: 2400
+          command: |
+            export PATH="/tmp/go/bin:$PATH"
+            export GOPATH=/tmp/go
+            cd /tmp/go/src/github.com/FactomProject/ptnet-eventstore/
+            ./test.sh
+
+# The flow is
+#    build
+#      |
+#      ---------- test
+#
+
+workflows:
+  version: 2
+  commit-workflow:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
+      - test:
+          filters:
+            tags:
+              only: /.*/
+          requires:
+            - build

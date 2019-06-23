@@ -1,0 +1,36 @@
+version: "3.7"
+services:
+  finite:
+    container_name: finite
+    build: .
+    image: factomproject/ptnet-eventstore
+    depends_on:
+      - pgsql
+    ports:
+      - "50051:50051"
+    environment:
+      PGUSER: pflow
+      PGPASS: pflow
+      PGDATABASE: pflow
+      PGHOST: pgsql
+    networks:
+      ptnet: {}
+  pgsql:
+    container_name: pgsql
+    image: postgres:11.1
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: pflow
+      POSTGRES_PASSWORD: pflow
+      POSTGRES_DB: pflow
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    networks:
+      ptnet: {}
+networks:
+    ptnet:
+      ipam:
+        driver: default
+        config:
+          - subnet: 10.8.0.0/16
