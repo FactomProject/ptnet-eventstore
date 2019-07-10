@@ -22,7 +22,7 @@ message JsonPayload {
   bytes json = 1;
 }
 
-message MachineQuery {} // KLUDGE: no params required
+message MachineQuery {} // placeholder: no params required
 
 message Ping {
   string nonce = 1;
@@ -50,7 +50,7 @@ message StateList {
 message Command {
   string id = 1;
   string schema = 2;
-  string action = 3;
+  repeated string action = 3; // array-of-actions n > 1 represent 'compound commands'
   uint64 multiple = 4;
   bytes payload = 5;
   repeated uint64 state = 6;

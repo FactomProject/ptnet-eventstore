@@ -30,7 +30,7 @@ type client struct {
 	pb.EventStoreClient
 }
 
-func (c *client) Dispatch(ctx context.Context, schema string, id string, action string, multiple uint64, payload interface{}, state []uint64) (*pb.State, error) {
+func (c *client) Dispatch(ctx context.Context, schema string, id string, action []string, multiple uint64, payload interface{}, state []uint64) (*pb.State, error) {
 	j, _ := json.Marshal(payload)
 
 	status, err := c.EventStoreClient.Dispatch(

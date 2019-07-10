@@ -8,6 +8,7 @@ import (
 	"github.com/FactomProject/ptnet-eventstore/event"
 	"github.com/FactomProject/ptnet-eventstore/storage"
 	"github.com/stackdump/gopflow/statemachine"
+	"strings"
 )
 
 type EventStore struct {
@@ -50,7 +51,49 @@ func (es *EventStore) GetEvent(schema, oid string) *event.Event {
 
 // evaluate valid events and persist to eventstore db
 func (es *EventStore) Commit(ctx context.Context, evt *event.Event) (*event.State, error) {
-	return es.execute(ctx, evt)
+	roles := ctx.Value("roles").(map[statemachine.Role]bool)
+
+	var err error
+	var outState[]int64
+	var s *event.State
+
+	txn, err := es.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable, ReadOnly: false})
+	if err != nil { panic(err) }
+
+	s, err = es.getState(txn, evt.Schema, evt.Id.String())
+	if err != nil { panic(err) }
+
+	m, ok := es.m[evt.Schema]
+	if !ok {
+		return s, unknownSchema(evt.Schema)
+	}
+
+	outState, err = execute(m, s, evt, roles)
+
+	if err == nil {
+		eventId := event.NewUuid()
+		evt.Uuid = eventId
+		evt.Parent = s.Head
+		evt.State = outState
+
+		s.State = outState
+		s.Head = eventId
+
+ 		// persist to db
+		err := es.appendEvent(txn, evt)
+		if err != nil { panic(err) }
+
+		err = es.setState(txn, s)
+		if err != nil { panic(err) }
+
+		// REVIEW: occasional error returned - doesn't seem to interfere w/ transaction
+		// seems to be a warning from the driver 'unexpected tag INSERT...'
+		txn.Commit()
+	} else {
+		txn.Rollback()
+	}
+
+	return s, err
 }
 
 func (es *EventStore) getState(txn *sql.Tx, schema string, oid string) (s *event.State, err error) {
@@ -134,85 +177,42 @@ func matchVectorPrecondition(a []int64, b []int64) bool {
 	return true
 }
 
-// create event and state table for given schema
-func (es *EventStore) execute(ctx context.Context, evt *event.Event) (*event.State, error) {
+func execute(m *statemachine.StateMachine, s *event.State, evt *event.Event, roles map[statemachine.Role]bool) (outState []int64, err error) {
 
-	roles := ctx.Value("roles").(map[statemachine.Role]bool)
+	var role statemachine.Role
+	inState := event.PqArrayToUint(s.State)
 
-	var err error
-	var s *event.State
-
-	txn, err := es.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable, ReadOnly: false})
-	if err != nil {
-		panic(err)
-	}
-
-	s, err = es.getState(txn, evt.Schema, evt.Id.String())
-	if err != nil {
-		panic(err)
-	}
-
-	m, ok := es.m[evt.Schema]
-
-	if !ok {
-		return s, unknownSchema(evt.Schema)
-	}
-
-	_, ok = m.Transitions[statemachine.Action(evt.Action)]
-	if !ok {
-		return s, unknownAction(evt.Schema, evt.Action)
-	}
-
-	outState, role, err := m.Transform(event.PqArrayToUint(s.State), evt.Action, evt.Multiple)
-
-	switch {
-	case err != nil:
-		{
-			break
+	for _, action := range strings.Split(evt.Action, ".") {
+		_, ok := m.Transitions[statemachine.Action(action)]
+		if !ok {
+			return outState, unknownAction(evt.Schema, action)
 		}
-	case !matchVectorPrecondition(outState, evt.State):
-		{
-			err = errors.New("precondition mismatch")
-			break
-		}
-	case !roles[event.SuperUser] && !roles[statemachine.Role(role)]:
-		{
-			err = errors.New(fmt.Sprintf("insufficent privledge %v", role))
-			break
-		}
-	default:
-		{
-			eventId := event.NewUuid()
+		outState, role, err = m.Transform(inState, action, evt.Multiple)
 
-			evt.Uuid = eventId
-			evt.Parent = s.Head
-			evt.State = outState
-
-			s.State = outState
-			s.Head = eventId
-
-			{ // store in db
-				err := es.appendEvent(txn, evt)
-				if err != nil {
-					panic(err)
-				}
-
-				err = es.setState(txn, s)
-				if err != nil {
-					panic(err)
+		switch {
+		case err != nil:
+			{
+				return outState, err
+			}
+		case !roles[event.SuperUser] && !roles[role]:
+			{
+				return outState, errors.New(fmt.Sprintf("insufficent privledge %v", role))
+			}
+		default: // use output as next input
+			{
+				for i, v := range outState {
+					inState[i] = uint64(v)
 				}
 			}
-			// REVIEW: occasional error returned - doesn't seem to interfere w/ transaction
-			// seems to be a warning from the driver 'unexpected tag INSERT...'
-			txn.Commit()
 		}
 	}
 
-	if err != nil {
-		txn.Rollback()
+	if !matchVectorPrecondition(outState, evt.State){
+		return outState, errors.New("precondition mismatch")
+	} else {
+		return outState, nil
 	}
 
-	return s, err
 }
 
 func (es *EventStore) GetMachine(schema string, uuid string) (*statemachine.StateMachine, bool) {

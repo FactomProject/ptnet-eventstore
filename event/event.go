@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
+	"strings"
 	"time"
 )
 
@@ -52,7 +53,7 @@ func ParseUuid(s string) uuid.UUID {
 }
 
 // fails with a panic
-func NewEvent(id string, schema string, action string, multiple uint64, payload interface{}) *Event {
+func NewEvent(id string, schema string, action []string, multiple uint64, payload interface{}) *Event {
 	e, err := newEvent(id, schema, action, multiple, payload)
 	if err != nil {
 		panic(err)
@@ -61,14 +62,18 @@ func NewEvent(id string, schema string, action string, multiple uint64, payload 
 }
 
 // return error if conversion fails
-func PrepareEvent(id string, schema string, action string, multiple uint64, payload interface{}) (*Event, error) {
+func PrepareEvent(id string, schema string, action []string, multiple uint64, payload interface{}) (*Event, error) {
 	return newEvent(id, schema, action, multiple, payload)
 }
 
 // for empty or truncated inputs
 const emptyJsonErrorMessage = "json: error calling MarshalJSON for type json.RawMessage: unexpected end of JSON input"
 
-func newEvent(id string, schema string, action string, multiple uint64, payload interface{}) (*Event, error) {
+func newEvent(id string, schema string, action []string, multiple uint64, payload interface{}) (*Event, error) {
+	if len(action) == 0 {
+		panic("empty action")
+	}
+
 	if payload == nil {
 		panic("empty payload")
 	}
@@ -88,7 +93,7 @@ func newEvent(id string, schema string, action string, multiple uint64, payload 
 	return &Event{
 		Id:       oid,
 		Schema:   schema,
-		Action:   action,
+		Action:   strings.Join(action, "."),
 		Multiple: multiple,
 		Payload:  j,
 		State:    nil,

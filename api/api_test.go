@@ -32,7 +32,7 @@ func TestCounterEvents(t *testing.T) {
 	schema := "counter"
 
 	commit := func(action string, multiple int, testFail bool) { // dispatch command
-		s, err := c.Dispatch(ctx, schema, oid, action, uint64(multiple), map[string]string{"foo": "bar"}, []uint64{})
+		s, err := c.Dispatch(ctx, schema, oid, []string{action}, uint64(multiple), map[string]string{"foo": "bar"}, []uint64{})
 
 		if s == nil || err != nil && testFail != true {
 			t.Fatalf("API call failed %v", err)
@@ -113,6 +113,8 @@ func TestCounterEvents(t *testing.T) {
 	xPass("INC0", 1)
 	xPass("INC1", 2)
 
+	xPass("INC1.INC0.INC0", 1) // compound action
+
 	xFail("DEC1", 3)
 	xFail("FAKE1", 1)
 
@@ -120,5 +122,6 @@ func TestCounterEvents(t *testing.T) {
 	state()
 	machine("counter")
 	machine("octoe")
+	machine("octoe2step")
 	machines()
 }

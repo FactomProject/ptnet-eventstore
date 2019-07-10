@@ -27,13 +27,13 @@ func TestCounter(t *testing.T) {
 	history := make([]*event.Event, 0)
 
 	// REVIEW: you must bring your own roles
-	// it is assumed role affiliation will be validated w/ DID/Verifyiable Credentials
+	// it is assumed role affiliation will be validated w/ DID/Verifiable Credentials
 	roles := map[statemachine.Role]bool{
 		"SuperUser": true,
 	}
 
 	commit := func(action string, multiple int, payload interface{}, assertError bool) {
-		evt := event.NewEvent(oid.String(), schema, action, uint64(multiple), payload)
+		evt := event.NewEvent(oid.String(), schema, []string{action}, uint64(multiple), payload)
 		st, err := es.Commit(context.WithValue(ctx, "roles", roles), evt)
 
 		fmt.Printf("%v\n", st.String())
@@ -57,6 +57,7 @@ func TestCounter(t *testing.T) {
 
 	}
 
+
 	// expect action to fail
 	xFail := func(action string, multiple int, payload interface{}) {
 		commit(action, multiple, payload, true)
@@ -66,6 +67,7 @@ func TestCounter(t *testing.T) {
 	xPass := func(action string, multiple int, payload interface{}) {
 		commit(action, multiple, payload, false)
 	}
+
 
 	xPass("INC0", 1, map[string]string{"hello": "world"})
 	if history[0] != nil {
@@ -87,6 +89,9 @@ func TestCounter(t *testing.T) {
 
 	// trigger invalid output -1
 	xFail("DEC0", 3, map[string]string{"hello": "failure"})
+
+	// compound action
+	xPass("INC0.INC1.INC1.INC1", 1, map[string]string{"hello": "world"})
 
 	t.Log("GetEvents")
 	for _, evt := range es.GetEvents("counter", oid.String()) {

@@ -58,6 +58,10 @@ func (s *server) Dispatch(ctx context.Context, in *pb.Command) (res *pb.EventSta
 		Message: "bad input",
 	}
 
+	if len(in.Action) == 0 {
+		return res, errors.New("action is required")
+	}
+
 	j := json.RawMessage{}
 	err = j.UnmarshalJSON(in.Payload)
 
