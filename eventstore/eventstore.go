@@ -8,6 +8,8 @@ import (
 	"github.com/FactomProject/ptnet-eventstore/event"
 	"github.com/FactomProject/ptnet-eventstore/storage"
 	"github.com/stackdump/gopflow/statemachine"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -54,14 +56,18 @@ func (es *EventStore) Commit(ctx context.Context, evt *event.Event) (*event.Stat
 	roles := ctx.Value("roles").(map[statemachine.Role]bool)
 
 	var err error
-	var outState[]int64
+	var outState []int64
 	var s *event.State
 
 	txn, err := es.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable, ReadOnly: false})
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 
 	s, err = es.getState(txn, evt.Schema, evt.Id.String())
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 
 	m, ok := es.m[evt.Schema]
 	if !ok {
@@ -79,12 +85,16 @@ func (es *EventStore) Commit(ctx context.Context, evt *event.Event) (*event.Stat
 		s.State = outState
 		s.Head = eventId
 
- 		// persist to db
+		// persist to db
 		err := es.appendEvent(txn, evt)
-		if err != nil { panic(err) }
+		if err != nil {
+			panic(err)
+		}
 
 		err = es.setState(txn, s)
-		if err != nil { panic(err) }
+		if err != nil {
+			panic(err)
+		}
 
 		// REVIEW: occasional error returned - doesn't seem to interfere w/ transaction
 		// seems to be a warning from the driver 'unexpected tag INSERT...'
@@ -177,17 +187,39 @@ func matchVectorPrecondition(a []int64, b []int64) bool {
 	return true
 }
 
+var actionRegex = regexp.MustCompile(`^(\w+)\(?(\d*)\)?`)
+
 func execute(m *statemachine.StateMachine, s *event.State, evt *event.Event, roles map[statemachine.Role]bool) (outState []int64, err error) {
 
 	var role statemachine.Role
 	inState := event.PqArrayToUint(s.State)
 
+	var command string
+	var mult uint64
+
 	for _, action := range strings.Split(evt.Action, ".") {
-		_, ok := m.Transitions[statemachine.Action(action)]
+
+		match := actionRegex.FindStringSubmatch(action)
+		if len(match) == 3 {
+			if match[2] == "" {
+				mult = 1
+			} else {
+				x, err := strconv.ParseInt(match[2], 10, 64)
+				if err != nil {
+					panic(err)
+				}
+				mult = uint64(x)
+			}
+			command = match[1]
+		} else {
+			panic("no match")
+		}
+
+		_, ok := m.Transitions[statemachine.Action(command)]
 		if !ok {
 			return outState, unknownAction(evt.Schema, action)
 		}
-		outState, role, err = m.Transform(inState, action, evt.Multiple)
+		outState, role, err = m.Transform(inState, command, mult)
 
 		switch {
 		case err != nil:
@@ -207,7 +239,7 @@ func execute(m *statemachine.StateMachine, s *event.State, evt *event.Event, rol
 		}
 	}
 
-	if !matchVectorPrecondition(outState, evt.State){
+	if !matchVectorPrecondition(outState, evt.State) {
 		return outState, errors.New("precondition mismatch")
 	} else {
 		return outState, nil

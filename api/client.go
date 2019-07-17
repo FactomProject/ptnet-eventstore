@@ -30,7 +30,16 @@ type client struct {
 	pb.EventStoreClient
 }
 
-func (c *client) Dispatch(ctx context.Context, schema string, id string, action []string, multiple uint64, payload interface{}, state []uint64) (*pb.State, error) {
+func mapToAction (command map[string]uint64) []*pb.Action {
+	var l []*pb.Action
+
+    for k, v := range command {
+    	l = append(l, &pb.Action{Action: k, Multiple: v})
+	}
+    return l
+}
+
+func (c *client) Dispatch(ctx context.Context, schema string, id string, action map[string]uint64, payload interface{}, state []uint64) (*pb.State, error) {
 	j, _ := json.Marshal(payload)
 
 	status, err := c.EventStoreClient.Dispatch(
@@ -38,8 +47,7 @@ func (c *client) Dispatch(ctx context.Context, schema string, id string, action 
 		&pb.Command{
 			Schema:   schema,
 			Id:       id,
-			Action:   action,
-			Multiple: multiple,
+			Action:   mapToAction(action),
 			Payload:  j,
 			State:    state,
 		})

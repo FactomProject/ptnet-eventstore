@@ -2,7 +2,6 @@ package eventstore_test
 
 import (
 	"context"
-	"fmt"
 	"github.com/FactomProject/ptnet-eventstore/event"
 	"github.com/FactomProject/ptnet-eventstore/eventstore"
 	"github.com/stackdump/gopflow/statemachine"
@@ -33,18 +32,19 @@ func TestCounter(t *testing.T) {
 	}
 
 	commit := func(action string, multiple int, payload interface{}, assertError bool) {
-		evt := event.NewEvent(oid.String(), schema, []string{action}, uint64(multiple), payload)
+		evt := event.NewEvent(oid.String(), schema, map[string]uint64{action: uint64(multiple)}, payload)
 		st, err := es.Commit(context.WithValue(ctx, "roles", roles), evt)
+		_ = st
 
-		fmt.Printf("%v\n", st.String())
+		//t.Logf("%v\n", st.String())
 		switch {
-		case err != nil:
-			{
-				t.Logf("Found Error %v %v", err, evt)
-			}
 		case err != nil && !assertError:
 			{
 				t.Fatal(err)
+			}
+		case err != nil:
+			{
+				t.Logf("Found Error %v %v", err, evt)
 			}
 		case err == nil:
 			{
@@ -57,7 +57,6 @@ func TestCounter(t *testing.T) {
 
 	}
 
-
 	// expect action to fail
 	xFail := func(action string, multiple int, payload interface{}) {
 		commit(action, multiple, payload, true)
@@ -67,7 +66,6 @@ func TestCounter(t *testing.T) {
 	xPass := func(action string, multiple int, payload interface{}) {
 		commit(action, multiple, payload, false)
 	}
-
 
 	xPass("INC0", 1, map[string]string{"hello": "world"})
 	if history[0] != nil {
@@ -91,7 +89,10 @@ func TestCounter(t *testing.T) {
 	xFail("DEC0", 3, map[string]string{"hello": "failure"})
 
 	// compound action
-	xPass("INC0.INC1.INC1.INC1", 1, map[string]string{"hello": "world"})
+	xPass("INC0.INC1.INC1.INC1", 1, map[string]string{"hello": "compound"})
+
+	// compound action mixed values
+	xPass("INC0(3).DEC0(2).INC1.INC1.INC1", 1, map[string]string{"hello": "muli-value"})
 
 	t.Log("GetEvents")
 	for _, evt := range es.GetEvents("counter", oid.String()) {
@@ -103,4 +104,5 @@ func TestCounter(t *testing.T) {
 
 	t.Log("GetState")
 	t.Log(es.GetState("counter", history[0].Id.String()).String())
+
 }

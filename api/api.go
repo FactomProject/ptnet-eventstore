@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
+	"net"
+	"time"
+
 	"github.com/FactomProject/ptnet-eventstore/event"
 	"github.com/FactomProject/ptnet-eventstore/eventstore"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/stackdump/gopflow/statemachine"
-	"log"
-	"net"
-	"time"
 
 	pb "github.com/FactomProject/ptnet-eventstore/finite"
 	"google.golang.org/grpc"
@@ -69,7 +70,7 @@ func (s *server) Dispatch(ctx context.Context, in *pb.Command) (res *pb.EventSta
 	var state *event.State
 
 	if err == nil {
-		evt, err = event.PrepareEvent(in.Id, in.Schema, in.Action, in.Multiple, j)
+		evt, err = event.PrepareEvent(in.Id, in.Schema, in.Action, j)
 	}
 
 	if evt != nil && err == nil {
@@ -110,16 +111,18 @@ func pbEvent(evt *event.Event) *pb.Event {
 		Value:   evt.Payload,
 	}
 
+	cmd := []*pb.Action{}
+	cmd = append(cmd, &pb.Action{Action: evt.Action, Multiple: evt.Multiple})
+
 	return &pb.Event{
-		Id:       evt.Id.String(),
-		Schema:   evt.Schema,
-		Action:   evt.Action,
-		Multiple: evt.Multiple,
-		Payload:  payload,
-		State:    event.PqArrayToUint(evt.State),
-		Ts:       ts,
-		Uuid:     evt.Uuid.String(),
-		Parent:   evt.Parent.String(),
+		Id:      evt.Id.String(),
+		Schema:  evt.Schema,
+		Action:  cmd,
+		Payload: payload,
+		State:   event.PqArrayToUint(evt.State),
+		Ts:      ts,
+		Uuid:    evt.Uuid.String(),
+		Parent:  evt.Parent.String(),
 	}
 }
 

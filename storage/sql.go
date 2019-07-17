@@ -84,10 +84,14 @@ func Migrate(tx *sql.Tx, schema string) {
 	var err error
 
 	_, err = tx.Exec(fmt.Sprintf(createEvents, EventTable(schema)))
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 
 	_, err = tx.Exec(fmt.Sprintf(createStates, StateTable(schema)))
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 }
 
 const dropTable = `

@@ -32,7 +32,7 @@ func TestCounterEvents(t *testing.T) {
 	schema := "counter"
 
 	commit := func(action string, multiple int, testFail bool) { // dispatch command
-		s, err := c.Dispatch(ctx, schema, oid, []string{action}, uint64(multiple), map[string]string{"foo": "bar"}, []uint64{})
+		s, err := c.Dispatch(ctx, schema, oid, map[string]uint64{action: uint64(multiple)}, map[string]string{"foo": "bar"}, []uint64{})
 
 		if s == nil || err != nil && testFail != true {
 			t.Fatalf("API call failed %v", err)

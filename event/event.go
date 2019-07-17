@@ -3,10 +3,12 @@ package event
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/lib/pq"
+	"github.com/FactomProject/ptnet-eventstore/finite"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 func NewStateVector() pq.Int64Array {
@@ -53,8 +55,8 @@ func ParseUuid(s string) uuid.UUID {
 }
 
 // fails with a panic
-func NewEvent(id string, schema string, action []string, multiple uint64, payload interface{}) *Event {
-	e, err := newEvent(id, schema, action, multiple, payload)
+func NewEvent(id string, schema string, action map[string]uint64, payload interface{}) *Event {
+	e, err := newEvent(id, schema, action, payload)
 	if err != nil {
 		panic(err)
 	}
@@ -62,14 +64,29 @@ func NewEvent(id string, schema string, action []string, multiple uint64, payloa
 }
 
 // return error if conversion fails
-func PrepareEvent(id string, schema string, action []string, multiple uint64, payload interface{}) (*Event, error) {
-	return newEvent(id, schema, action, multiple, payload)
+func PrepareEvent(id string, schema string, action []*finite.Action, payload interface{}) (*Event, error) {
+	cmd := make(map[string]uint64)
+	for _, v := range action {
+		cmd[v.Action] = v.Multiple
+	}
+	return newEvent(id, schema, cmd, payload)
 }
 
 // for empty or truncated inputs
 const emptyJsonErrorMessage = "json: error calling MarshalJSON for type json.RawMessage: unexpected end of JSON input"
 
-func newEvent(id string, schema string, action []string, multiple uint64, payload interface{}) (*Event, error) {
+func flattenAction(action map[string]uint64) string {
+	var flat []string
+	//fmt.Printf("%v", action)
+
+	for a, m := range action {
+		flat = append(flat, fmt.Sprintf("%s(%v)", a, m))
+	}
+
+	return strings.Join(flat, ".")
+}
+
+func newEvent(id string, schema string, action map[string]uint64, payload interface{}) (*Event, error) {
 	if len(action) == 0 {
 		panic("empty action")
 	}
@@ -91,13 +108,12 @@ func newEvent(id string, schema string, action []string, multiple uint64, payloa
 	}
 
 	return &Event{
-		Id:       oid,
-		Schema:   schema,
-		Action:   strings.Join(action, "."),
-		Multiple: multiple,
-		Payload:  j,
-		State:    nil,
-		TS:       time.Now(),
+		Id:      oid,
+		Schema:  schema,
+		Action:  flattenAction(action),
+		Payload: j,
+		State:   nil,
+		TS:      time.Now(),
 	}, nil
 }
 
