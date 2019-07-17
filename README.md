@@ -10,7 +10,7 @@ Uses Petri-Nets as state machines to validate events before appending to a event
 
 [![CircleCI](https://circleci.com/gh/FactomProject/ptnet-eventstore.svg?style=svg)](https://circleci.com/gh/FactomProject/ptnet-eventstore)
 
-Pre-Alpha - Seems to function in a development environment
+Alpha - Seems to function in a development environment
 
 Not tested under load.
 

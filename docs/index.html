@@ -37,8 +37,8 @@
           <button type="button" class="navbar-toggle collapsed"
           data-toggle="collapse" data-target=
           "#bs-example-navbar-collapse-1" aria-expanded=
-          "false"><span class="sr-only">Toggle navigation</span>
-          </button>
+          "false"><span class="sr-only">Toggle
+          navigation</span></button>
         </div>
         <div class="collapse navbar-collapse" id=
         "bs-example-navbar-collapse-1">
@@ -67,12 +67,15 @@
   <div class="container">
     <h3>FATIP</h3>This project serves as a reference implementation
     to demonstrate<br>
-    a proposed <a href= "https://github.com/Factom-Asset-Tokens/FAT">Factom Asset Token</a> standard.
+    a proposed <a href=
+    "https://github.com/Factom-Asset-Tokens/FAT">Factom Asset
+    Token</a> standard.
     <p>Read a draft of <a href=
     "https://github.com/FactomProject/ptnet-eventstore/blob/master/fatip.md">
     the proposal</a> contained in this repo.</p>
     <h3>Motivation</h3>
-    <p>Much time and effort as been spent around tokenized value,<br>
+    <p>Much time and effort as been spent around tokenized
+    value,<br>
     this is an attempt to view tokens first and foremost as a
     meaningful expression of data.</p>
     <p>Rather than trying to define a specific token standard, this
@@ -89,12 +92,24 @@
       <li>Extensible and Updatable using systematic method of
       expressing behavior</li>
     </ul>
-    <h3>Code <a href= "https://circleci.com/gh/FactomProject/ptnet-eventstore"><img src="https://circleci.com/gh/FactomProject/ptnet-eventstore.svg?style=svg">
+    <h3>Code <a href=
+    "https://circleci.com/gh/FactomProject/ptnet-eventstore"><img alt="circleci badge"
+    src=
+    "https://circleci.com/gh/FactomProject/ptnet-eventstore.svg?style=svg">
     </a></h3>
-    <p>Currently all operations are tested against the Factom
-    Blockchain using<br>
-    the simulator that is part of the project found here: <a href=
-    "https://github.com/FactomProject/factomd">factomd</a></p>
+    <p>The above reference implemenation writes to PostgreSQL.<br>
+    NOTE: no specific backend storage is required for this
+    approach, though maintaining an index of events seems like a
+    good idea.</p>
+    <h3><a href=
+    "https://developers.google.com/protocol-buffers/docs/proto3"
+    target="_blank">Protobuf</a></h3>
+    <p>Download <a href=
+    "https://project.factom.com/ptnet-eventstore/event.proto"
+    target="_blank">event.proto</a></p>
+    <p>Also see the included wrapper <a href=
+    "https://github.com/FactomProject/ptnet-eventstore/blob/master/api/client.go">
+    ./api/client.go</a></p>
   </div>
 </body>
 </html>
