@@ -13,6 +13,7 @@ service EventStore {
   rpc Status (Ping) returns (Pong) {}
   rpc ListMachines (MachineQuery) returns (MachineList) {}
   rpc GetMachine (Query) returns (Machine) {}
+  rpc GetPlaceMap (Query) returns (PlaceMap) {}
   rpc Dispatch (Command) returns (EventStatus) {}
   rpc GetEvent (Query) returns (EventList) {}
   rpc GetState (Query) returns (StateList) {}
@@ -55,18 +56,20 @@ message Action {
 message Command {
   string id = 1;
   string schema = 2;
-  repeated Action action = 3;
-  bytes payload = 5;
+  string chain = 3;
+  repeated Action action = 4;
+  uint64 multiple = 5;
   repeated uint64 state = 6;
 }
 
 message State {
   string id = 1;
   string schema = 2;
-  repeated uint64 state = 3;
-  string head = 4;
-  google.protobuf.Timestamp created = 5;
-  google.protobuf.Timestamp updated = 6;
+  string chain = 3;
+  repeated uint64 state = 4;
+  string head = 5;
+  google.protobuf.Timestamp created = 6;
+  google.protobuf.Timestamp updated = 7;
 }
 
 message EventStatus {
@@ -78,12 +81,13 @@ message EventStatus {
 message Event {
   string id = 1;
   string schema = 2;
-  repeated Action action = 3;
-  google.protobuf.Any payload = 4;
-  repeated uint64 state = 5;
-  google.protobuf.Timestamp ts = 6;
-  string uuid = 7;
-  string parent = 8;
+  string chain = 3;
+  repeated Action action = 4;
+  google.protobuf.Any payload = 5;
+  repeated uint64 state = 6;
+  google.protobuf.Timestamp ts = 7;
+  string uuid = 8;
+  string parent = 9;
 }
 
 message Guard {
@@ -98,6 +102,17 @@ message Transition {
 
 message Schemata {
   repeated string schema = 1;
+}
+
+message Place {
+  uint64 offset = 1;
+  uint64 initial = 2;
+  uint64 capacity = 3;
+}
+
+message PlaceMap {
+  string schema = 1;
+  map<string, Place> map = 2;
 }
 
 message Machine {
