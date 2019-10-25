@@ -31,5 +31,5 @@ Petri-nets are well explored data structures that have mathematically verifiable
 States and transitions are computed as a [Vector addition System with State](https://en.wikipedia.org/wiki/Vector_addition_system)
 This vector format makes machine learning analysis of event logs very trivial.
 
-This library is compatible with `.pflow` files produced with a [visual editor](http://www.pneditor.org/)
+This library is compatible with `.pflow` files produced with a Java [visual editor](./pneditor-0.71.jar) 
 Once a user is familiar with the basic semantics of a Petri-Net, new process flows can be developed rapidly.
